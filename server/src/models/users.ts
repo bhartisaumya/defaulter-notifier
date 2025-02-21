@@ -60,6 +60,6 @@ UsersSchema.methods.isValidPassword = async function (password: string): Promise
     } 
 }
 
-const SuperAdminModel = model('superAdmin', UsersSchema)
+const SuperAdminModel = model('users', UsersSchema)
 
 export default SuperAdminModel;

@@ -7,11 +7,13 @@ dotenv.config()
 const authModule = {
     signAccessToken: function (email: string, role: string){
         return new Promise((resolve, reject) => {
-            const payload = {};
-            const secret = process.env.ACCESS_TOKEN_SECRET || "super Secret key";
-            const options = {
+            const payload = {
                 audience: email,
                 role: role,
+            };
+            const secret = process.env.ACCESS_TOKEN_SECRET || "super Secret key";
+            const options = {
+                
                 expiresIn: 3600, // 1 hour in seconds
                 issuer: 'bhartiking.com'
             };
@@ -26,13 +28,17 @@ const authModule = {
     
     verifyAccessToken: function(req: any, res: any, next: any){
         const authHeader = req.headers['authorization'];
+
+        // console.log(authHeader);
         
         if(!authHeader)
             return next(createError.Unauthorized());
 
         const bearerToken = authHeader.split(' ');
         const token = bearerToken[1];
-        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "", (err: any, payload: any) => {
+
+        console.log(token)
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "super Secret key", (err: any, payload: any) => {
             if(err){
                 const message = err.name == "JsonWebTokenError" ?
                          "Unauthorized" : err.message;

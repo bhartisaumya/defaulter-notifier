@@ -22,7 +22,7 @@ const addNewCompany = async(req: Request, res: Response, next: NextFunction) => 
   try {
     const {name, address} = req.body
 
-    const company = await CompanyModel.find({name})
+    const company = await CompanyModel.findOne({name})
 
     if(company)
       throw createError.Conflict("Company already exists");

@@ -6,9 +6,9 @@ import { Role } from "../models/users";
 const router = Router();
 
 router.get("/", restrictTo([Role.SUPER_ADMIN]), getAllUsers);
-router.post("/", restrictTo([Role.SUPER_ADMIN, Role.ADMIN]), addNewCompanyUser);
-router.patch("/", restrictTo([Role.SUPER_ADMIN, Role.ADMIN]), updateCompanyUser);
-router.delete("/", restrictTo([Role.SUPER_ADMIN, Role.ADMIN]), deleteCompanyUser);
+router.post("/", restrictTo([Role.SUPER_ADMIN]), addNewCompanyUser);
+router.patch("/", restrictTo([Role.SUPER_ADMIN]), updateCompanyUser);
+router.delete("/", restrictTo([Role.SUPER_ADMIN]), deleteCompanyUser);
 
 
 export default router;

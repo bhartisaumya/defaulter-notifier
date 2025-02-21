@@ -4,34 +4,7 @@ import CompanyUsers from "../models/companyUsers";
 import createError from 'http-errors'
 import authModule from "../middlewares/authentication"
 import { Types } from "mongoose";
-
-// const login = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
-//   try {
-//     const {email, password} = req.body;
-    
-//     // if the details not present
-//     if (!email || !password)
-//       throw createError.NotAcceptable("Sufficient data not provided");
-
-//     const isUser = await CompanyUsers.findOne({email});
-
-//     if (!isUser)
-//       throw createError.NotFound("Sufficient data not provided");
-
-//     const validation = await isUser.isValidPassword(password);
-
-
-//     if(!validation)
-//       throw createError.Unauthorized("Invalud Password");
-
-//     const token = await authModule.signAccessToken(isUser.email, isUser.role);
-
-//     res.status(200).json({token});
-//   } catch (error) {
-//     next(error);
-//   }
-// }
-
+import CompanyModel from "../models/companies";
 
 const getAllUsers = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
   try {
@@ -54,7 +27,7 @@ const addNewCompanyUser = async(req: Request, res: Response, next: NextFunction)
 
     const companyId = new Types.ObjectId(company_id);
 
-    const company = await CompanyUsers.findOne({_id: companyId});
+    const company = await CompanyModel.findById(company_id);
 
     if(!company)
       throw createError.NotFound("Company not found");

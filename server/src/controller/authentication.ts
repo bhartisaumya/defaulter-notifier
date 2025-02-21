@@ -10,7 +10,7 @@ const login = async (req: Request, res: Response, next: NextFunction) : Promise<
     try {
         const {email, password} = req.body;
 
-        if(!email || password)
+        if(!email || !password)
             throw createError.NotAcceptable("Sufficient data not provided");
 
         const user = await UserModel.findOne({email});

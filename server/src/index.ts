@@ -13,6 +13,7 @@ import companyTemplate from "./routes/companyTemplate"
 import authHandler, {restrictTo} from "./middlewares/authentication"
 import {login} from "./controller/authentication"
 import { Role } from "./models/users";
+import { addSuperAdmin } from "./temp";
 
 
 
@@ -22,6 +23,7 @@ import { Role } from "./models/users";
 //         message: "Server is healthy!!!"
 //     });
 // })
+app.use('/add-super-admin', addSuperAdmin)
 app.use('/auth', login)
 // for authentication
 app.use(authHandler.verifyAccessToken)
