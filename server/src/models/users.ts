@@ -8,7 +8,15 @@ export enum Role {
     USER = "user"
 }
 
-const UsersSchema = new Schema({
+interface IUsers extends Document {
+    email: string;
+    name: string;
+    password: string;
+    role: Role;
+    isValidPassword(password: string): Promise<boolean>;
+}
+
+const UsersSchema = new Schema<IUsers>({
     email: {type: String, unique: true, required: true},
     name: {type: String, required: true},
     password: {type: String, required: true},
