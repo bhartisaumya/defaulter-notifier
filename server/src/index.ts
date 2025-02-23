@@ -1,8 +1,10 @@
 import express, {Request, Response, NextFunction, json} from "express"
+import cors from 'cors';
 
 import "./utils/dbConnection"
 const app = express();
 
+app.use(cors());
 app.use(express.json())
 app.use(express.urlencoded({extended : true}));
 
@@ -12,8 +14,10 @@ import companies from "./routes/companies"
 import companyTemplate from "./routes/companyTemplate"
 import authHandler, {restrictTo} from "./middlewares/authentication"
 import {login} from "./controller/authentication"
-import { Role } from "./models/users";
+import { Roles } from "./interface";
 import { addSuperAdmin } from "./temp";
+
+
 
 
 
@@ -29,7 +33,7 @@ app.use('/auth', login)
 app.use(authHandler.verifyAccessToken)
 
 app.use('/company-users', companyUsers)
-app.use('/companies', restrictTo([Role.SUPER_ADMIN]), companies)
+app.use('/companies', restrictTo([Roles.SUPER_ADMIN]), companies)
 app.use('/templates', companyTemplate)
 
 

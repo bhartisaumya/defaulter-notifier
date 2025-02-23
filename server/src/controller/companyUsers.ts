@@ -5,6 +5,7 @@ import createError from 'http-errors'
 import authModule from "../middlewares/authentication"
 import { Types } from "mongoose";
 import CompanyModel from "../models/companies";
+import SuperAdminModel from "../models/superAdmin";
 
 const getAllUsers = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
   try {
@@ -18,28 +19,23 @@ const getAllUsers = async (req: Request, res: Response, next: NextFunction) : Pr
 
 const addNewCompanyUser = async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const {email, name, password, company_id, admin} = req.body
+    const {email, name, password, company, role} = req.body
 
     const user = await UsersModel.findOne({email});
+    const superAdmin = await SuperAdminModel.findOne({email})
 
-    if(user)
+    if(user || superAdmin)
       throw createError.Conflict("Email already registered");
 
-    const companyId = new Types.ObjectId(company_id);
 
-    const company = await CompanyModel.findById(company_id);
+    const userCompany = await CompanyModel.findOne({company});
 
-    if(!company)
+    if(!userCompany)
       throw createError.NotFound("Company not found");
 
-    const role = admin ? Role.ADMIN : Role.USER;
 
-    const newUser = new UsersModel({email, name, password, role});
-    const savedUser = await newUser.save();
-
-    const newCompanyUser = new CompanyUsers({user_id: savedUser.id, company_id: companyId});
-    await newCompanyUser.save();
-
+    const newUser = new UsersModel({email, name, password, role, company});
+    await newUser.save();
 
     res.status(201).json({message: "User added successfully"});
 
@@ -50,18 +46,25 @@ const addNewCompanyUser = async(req: Request, res: Response, next: NextFunction)
 
 const updateCompanyUser = async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const {email, name, password, company_id, admin} = req.body;
+    const id = req.query.id as string
+    console.log("id", id)
+    const {email, name, password, company, admin} = req.body;
     const role = admin ? Role.ADMIN : Role.USER;
 
-    const user = await CompanyUsers.findOneAndUpdate({email}, {name, password, role});
+
+    const isCompany = CompanyModel.findOne({company})
+
+    if(!isCompany)
+      throw createError.NotFound("Company not found");
+
+    const user = await UsersModel.findByIdAndUpdate(id, {email, name, password, role, company});
 
     if(!user)
       throw createError.NotFound("User not found");
 
-    await CompanyUsers.findOneAndUpdate({user_id: user._id}, {company_id});
-
     res.status(200).json({message: "User updated successfully"});
   } catch (error) {
+    console.log(error)
     next(error)
   }
 }
@@ -79,8 +82,6 @@ const deleteCompanyUser = async(req: Request, res: Response, next: NextFunction)
     if(!user)
       throw createError.NotFound("User not found");
 
-    await CompanyUsers.findOneAndDelete({user_id: user._id});
-    
     res.status(200).json({message: "User deleted successfully"});
   } catch (error) {
     next(error)

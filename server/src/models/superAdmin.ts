@@ -2,30 +2,23 @@ import {Schema, model} from "mongoose"
 import bcrypt from "bcrypt"
 
 
-export enum Role {
-    ADMIN = "admin",
-    USER = "user"
-}
-
-interface IUsers extends Document {
+interface ISuperAdmin extends Document {
     email: string;
     name: string;
     password: string;
-    role: Role;
-    company: string;
+    role: string;
     isValidPassword(password: string): Promise<boolean>;
 }
 
-const UsersSchema = new Schema<IUsers>({
-    email: {type: String, lowercase: true, unique: true, required: true},
+const SuperAdminSchema = new Schema<ISuperAdmin>({
+    email: {type: String, unique: true, required: true},
     name: {type: String, required: true},
     password: {type: String, required: true},
-    company: {type: String, required: true},
-    role: {type: String, enum: Role, required: true}
+    role: {type: String}
 })
 
 
-UsersSchema.pre("save" , async function(next){
+SuperAdminSchema.pre("save" , async function(next){
     try{
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(this.password, salt);
@@ -37,7 +30,7 @@ UsersSchema.pre("save" , async function(next){
     }
 })
 
-UsersSchema.pre("findOneAndUpdate", async function (next) {
+SuperAdminSchema.pre("findOneAndUpdate", async function (next) {
     try {
         const update = this.getUpdate() as any;
 
@@ -53,7 +46,7 @@ UsersSchema.pre("findOneAndUpdate", async function (next) {
 });
 
 
-UsersSchema.methods.isValidPassword = async function (password: string): Promise<boolean>{
+SuperAdminSchema.methods.isValidPassword = async function (password: string): Promise<boolean>{
     try {
         return bcrypt.compare(password, this.password);
     } catch (error) {
@@ -61,6 +54,6 @@ UsersSchema.methods.isValidPassword = async function (password: string): Promise
     } 
 }
 
-const UserModel = model('users', UsersSchema)
+const SuperAdminModel = model('superAdmin', SuperAdminSchema)
 
-export default UserModel;
+export default SuperAdminModel;

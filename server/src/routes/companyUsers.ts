@@ -2,13 +2,13 @@ import { Router } from "express";
 import {getAllUsers, addNewCompanyUser, updateCompanyUser, deleteCompanyUser} from "../controller/companyUsers";
 
 import {restrictTo} from "../middlewares/authentication";
-import { Role } from "../models/users";
+import { Roles } from "../interface";
 const router = Router();
 
-router.get("/", restrictTo([Role.SUPER_ADMIN]), getAllUsers);
-router.post("/", restrictTo([Role.SUPER_ADMIN]), addNewCompanyUser);
-router.patch("/", restrictTo([Role.SUPER_ADMIN]), updateCompanyUser);
-router.delete("/", restrictTo([Role.SUPER_ADMIN]), deleteCompanyUser);
+router.get("/", restrictTo([Roles.SUPER_ADMIN]), getAllUsers);
+router.post("/", restrictTo([Roles.SUPER_ADMIN]), addNewCompanyUser);
+router.patch("/", restrictTo([Roles.SUPER_ADMIN]), updateCompanyUser);
+router.delete("/", restrictTo([Roles.SUPER_ADMIN]), deleteCompanyUser);
 
 
 export default router;
