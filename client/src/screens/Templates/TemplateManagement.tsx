@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Building2, Menu } from 'lucide-react';
+import { LayoutDashboard, Menu } from 'lucide-react';
 import axios from 'axios';
 
 import { ITemplate } from "../../interface";
