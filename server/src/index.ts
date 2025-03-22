@@ -9,9 +9,12 @@ app.use(express.json())
 app.use(express.urlencoded({extended : true}));
 
 import {Data} from "./config"
+
 import companyUsers from "./routes/companyUsers"
 import companies from "./routes/companies"
 import companyTemplate from "./routes/companyTemplate"
+import templateColumns from "./routes/templateColumns"
+
 import authHandler, {restrictTo} from "./middlewares/authentication"
 import {login} from "./controller/authentication"
 import { Roles } from "./interface";
@@ -33,14 +36,15 @@ app.use('/auth', login)
 app.use(authHandler.verifyAccessToken)
 
 app.use('/company-users', companyUsers)
-app.use('/companies', restrictTo([Roles.SUPER_ADMIN]), companies)
+app.use('/companies', companies)
 app.use('/templates', companyTemplate)
+app.use('/template-columns', templateColumns)
 
 
 // Error Handling
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     res.status(err.status || 500)
-    res.send({
+    res.json({
         error: {
             status: err.status,
             message: err.message

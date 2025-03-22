@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import {Data} from "../config"
 
 
-const connectionStr = "mongodb://localhost:27017/test"
+const connectionStr = "mongodb://127.0.0.1:27017/test"
+// mongodb://127.0.0.1:27017/myDatabase
 //  || Data.DATABASE_URL as string
 
 // console.log("connectionStr:", connectionStr)

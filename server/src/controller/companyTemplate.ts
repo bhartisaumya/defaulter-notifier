@@ -7,7 +7,10 @@ import authModule from "../middlewares/authentication"
 
 const getTemplate = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
   try {
-    const templates = await TemplateModel.find();
+    const company = req.query.company
+    console.log(company)
+
+    const templates = await TemplateModel.find({company});
 
     if (!templates)
       throw createError.NotFound("Template not found");
@@ -21,15 +24,15 @@ const getTemplate = async (req: Request, res: Response, next: NextFunction) : Pr
 
 const addNewTemplate = async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const {title, body, company_id} = req.body
+    const {title, body, company} = req.body
 
     const template = await TemplateModel.findOne
-    ({title, company_id});
+    ({title, company});
 
     if(template)
       throw createError.Conflict("Template already exists");
 
-    const newTemplate = new TemplateModel({title, body, company_id});
+    const newTemplate = new TemplateModel({title, body, company});
     newTemplate.save();
     
     res.status(201).json({message: "Template added successfully"});
@@ -55,9 +58,11 @@ const deleteTemplate = async(req: Request, res: Response, next: NextFunction) =>
 
 const updateTemplate = async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const {_id, title, body, company_id} = req.body;
+    const _id = req.query._id
+    console.log(_id)
+    const {title, body, company} = req.body;
     const template = await TemplateModel.findByIdAndUpdate
-    (_id, {title, body, company_id});
+    (_id, {title, body, company});
 
     if(!template)
       throw createError.NotFound("Template not found");

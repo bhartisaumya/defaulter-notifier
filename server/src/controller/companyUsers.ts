@@ -1,9 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import UsersModel, {Role} from "../models/users";
-import CompanyUsers from "../models/companyUsers";
 import createError from 'http-errors'
-import authModule from "../middlewares/authentication"
-import { Types } from "mongoose";
 import CompanyModel from "../models/companies";
 import SuperAdminModel from "../models/superAdmin";
 
@@ -19,7 +16,13 @@ const getAllUsers = async (req: Request, res: Response, next: NextFunction) : Pr
 
 const addNewCompanyUser = async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const {email, name, password, company, role} = req.body
+    const {email, name, password, company, isAdmin} = req.body
+
+    console.log("isAdmin:", isAdmin);
+
+    const role = isAdmin ? Role.ADMIN : Role.USER;
+
+    console.log(email, name, password, company, isAdmin)  
 
     const user = await UsersModel.findOne({email});
     const superAdmin = await SuperAdminModel.findOne({email})
@@ -28,7 +31,7 @@ const addNewCompanyUser = async(req: Request, res: Response, next: NextFunction)
       throw createError.Conflict("Email already registered");
 
 
-    const userCompany = await CompanyModel.findOne({company});
+    const userCompany = await CompanyModel.findOne({name: company});
 
     if(!userCompany)
       throw createError.NotFound("Company not found");
@@ -40,6 +43,7 @@ const addNewCompanyUser = async(req: Request, res: Response, next: NextFunction)
     res.status(201).json({message: "User added successfully"});
 
   } catch (error) {
+    console.log(error)
     next(error)
   }
 }
@@ -48,8 +52,8 @@ const updateCompanyUser = async(req: Request, res: Response, next: NextFunction)
   try {
     const id = req.query.id as string
     console.log("id", id)
-    const {email, name, password, company, admin} = req.body;
-    const role = admin ? Role.ADMIN : Role.USER;
+    const {email, name, password, company, isAdmin} = req.body;
+    const role = isAdmin ? Role.ADMIN : Role.USER;
 
 
     const isCompany = CompanyModel.findOne({company})

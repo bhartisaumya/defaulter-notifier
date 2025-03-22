@@ -37,7 +37,7 @@ const authModule = {
         const bearerToken = authHeader.split(' ');
         const token = bearerToken[1];
 
-        console.log(token)
+        // console.log(token)
         jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "super Secret key", (err: any, payload: any) => {
             if(err){
                 const message = err.name == "JsonWebTokenError" ?

@@ -1,10 +1,10 @@
-import {Schema, model, Types} from "mongoose"
+import {Schema, model} from "mongoose"
 
 
 const TemplateSchema = new Schema({
     title: {type: String, required: true},
     body: {type: String, required: true},
-    company_id: {type: Types.ObjectId, required: true}
+    company: {type: String, required: true}
 })
 
 

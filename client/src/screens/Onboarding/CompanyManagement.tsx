@@ -1,31 +1,32 @@
 import React from 'react';
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, Menu } from 'lucide-react';
 import axios from 'axios';
 
-import { ITemplate } from "../../interface";
+import { ICompany } from "../../interface";
 import { SheetHeader, SheetRow } from '../../components/SheetColumn';
 import SearchBar from '../../components/SearchBar';
 
-const base_url = "http://localhost:8000";
+const base_url = import.meta.env.VITE_BASE_URL;
 
-export default function TemplateManagement() {
+export default function CompanyManagement() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTemplates, setEditingTemplates] = useState<any | null>(null);
+  const [editingCompany, setEditingCompany] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const role = sessionStorage.getItem('role')
+  const role = sessionStorage.getItem("role")
 
   // Form state
   const [formData, setFormData] = useState({
-    title: "",
-    body: "",
+    name: "",
+    address: "",
+    credit: 0
   });
 
   useEffect(() => {
@@ -36,18 +37,15 @@ export default function TemplateManagement() {
     setLoading(true);
     try {
       const token = sessionStorage.getItem('token');
-      const company = sessionStorage.getItem('company');
-
-      const url = `${base_url}/templates/?company=${company}`;
-      const template = await axios.get(url, {
+      const companies = await axios.get(`${base_url}/companies`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setTemplates(template.data);
+      setCompanies(companies.data);
     } catch (err: any) {
-      alert(err.response?.data.error.message);
-      setError("Failed to fetch Templates");
+      alert(err.response.data.error.message);
+      setError("Failed to fetch Companies");
     } finally {
       setLoading(false);
     }
@@ -58,18 +56,14 @@ export default function TemplateManagement() {
     setLoading(true);
 
     try {
-      let url = `${base_url}/templates`;
-      url += editingTemplates ? `/?_id=${editingTemplates._id}` : "";
+      let url = `${base_url}/companies`;
+      url += editingCompany ? `/?id=${editingCompany._id}` : "";
 
       const token = sessionStorage.getItem('token');
-      const company = sessionStorage.getItem('company');
-      const method = editingTemplates ? "PATCH" : "POST";
+      const method = editingCompany ? "PATCH" : "POST";
 
       await (axios as any)[method.toLowerCase()](url,
-        {
-          ...formData,
-          company
-        },
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -80,35 +74,37 @@ export default function TemplateManagement() {
       await fetchData();
       handleCloseModal();
     } catch (err: any) {
-      alert(err.response?.data.error.message);
-      setError("Failed to save Templates");
+      alert(err.response.data.error.message);
+      setError("Failed to save companies");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (template: ITemplate) => {
-    setEditingTemplates(template);
+  const handleEdit = (company: ICompany) => {
+    setEditingCompany(company);
     setFormData({
-      title: template.title,
-      body: template.body,
+      name: company.name,
+      address: company.address,
+      credit: company.credit
     });
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setEditingTemplates(null);
+    setEditingCompany(null);
     setFormData({
-      title: "",
-      body: ""
+      name: "",
+      address: "",
+      credit: 0
     });
   };
 
-  const filteredTemplates = templates.filter(
-    (template) =>
-      template.body.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      template.title.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredCompanies = companies.filter(
+    (company) =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.address.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -117,7 +113,7 @@ export default function TemplateManagement() {
       <div className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-white shadow-lg transition-all duration-300 ease-in-out`}>
         <div className="h-full flex flex-col">
           <div className="p-4 flex items-center justify-between">
-            {isSidebarOpen && <h2 className="text-xl font-semibold text-gray-800">Menu</h2>}
+            {isSidebarOpen && <h2 className="text-xl font-semibold text-gray-800">Admin</h2>}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 rounded-lg hover:bg-gray-100"
@@ -133,22 +129,14 @@ export default function TemplateManagement() {
               <LayoutDashboard size={24} />
               {isSidebarOpen && <span className="ml-3">Dashboard</span>}
             </button>
-            <button
-              onClick={() => navigate("/csv-upload")}
-              className="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            >
-              <LayoutDashboard size={24} />
-              {isSidebarOpen && <span className="ml-3">CSV Upload</span>}
-            </button>
-
-            <button
-              onClick={() => navigate("/manage-columns")}
-              className="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            >
-              <LayoutDashboard size={24} />
-              {isSidebarOpen && <span className="ml-3">Column Mapping</span>}
-            </button>
             
+            <button
+              onClick={() => navigate('/manage-users')}
+              className="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <Users size={24} />
+              {isSidebarOpen && <span className="ml-3">Manage Users</span>}
+            </button>
           </nav>
           <div className="p-4">
             <button
@@ -170,12 +158,12 @@ export default function TemplateManagement() {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Template Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Company Management</h1>
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                Add New Template
+                Add New Company
               </button>
             </div>
 
@@ -189,12 +177,12 @@ export default function TemplateManagement() {
               </div>
             )}
 
-            {/* Templates table */}
+            {/* Companies table */}
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
-                    <SheetHeader columnNames={["Title", "BODY"]} />
+                    <SheetHeader columnNames={["NAME", "ADDRESS", "CREDIT"]} />
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {loading ? (
@@ -217,18 +205,18 @@ export default function TemplateManagement() {
                           </div>
                         </td>
                       </tr>
-                    ) : filteredTemplates.length === 0 ? (
+                    ) : filteredCompanies.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                          No Template found
+                          No Company found
                         </td>
                       </tr>
                     ) : (
-                      filteredTemplates.map((template) => (
+                      filteredCompanies.map((company) => (
                         <SheetRow
-                          key={template._id}
-                          data={template}
-                          dataFields={["title", "body"]}
+                          key={company._id}
+                          data={company}
+                          dataFields={["name", "address", "credit"]}
                           handleEdit={handleEdit}
                         />
                       ))
@@ -241,12 +229,12 @@ export default function TemplateManagement() {
         </div>
       </div>
 
-      {/* Modal for adding/editing templates */}
+      {/* Modal for adding/editing companies */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">{editingTemplates ? "Edit Template" : "Add New Template"}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{editingCompany ? "Edit Company" : "Add New Company"}</h2>
               <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-500">
                 <span className="sr-only">Close</span>
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -256,28 +244,42 @@ export default function TemplateManagement() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                  Title
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Name
                 </label>
                 <input
                   type="text"
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
               <div>
-                <label htmlFor="body" className="block text-sm font-medium text-gray-700">
-                  Body
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                  Address
                 </label>
-                <textarea
-                  id="body"
-                  value={formData.body}
-                  onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                <input
+                  type="text"
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  rows={4}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                  CREDIT
+                </label>
+                <input
+                  type="number"
+                  id="address"
+                  value={formData.credit}
+                  onChange={(e) => setFormData({ ...formData, credit: Number(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
@@ -299,7 +301,7 @@ export default function TemplateManagement() {
                       : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     }`}
                 >
-                  {loading ? "Saving..." : editingTemplates ? "Save Changes" : "Add Template"}
+                  {loading ? "Saving..." : editingCompany ? "Save Changes" : "Add Company"}
                 </button>
               </div>
             </form>

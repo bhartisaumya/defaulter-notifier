@@ -1,14 +1,19 @@
 
 import {createBrowserRouter, RouterProvider} from "react-router-dom"
+
 import AuthPage from "./screens/AuthPage";
+
 import SuperAdminDashboard from "./screens/Dashboards/SuperAdminDashboard";
 import AdminDashboard from "./screens/Dashboards/AdminDashboard";
 import CompanyUserDashboard from "./screens/Dashboards/CompanyUserDashboard";
-import UserManagementPage from "./components/UserManagement";
-import CompanyManagement from "./components/CompanyManagement";
+
+import UserManagementPage from "./screens/Onboarding/UserManagement";
+import CompanyManagement from "./screens/Onboarding/CompanyManagement";
+
 import TemplateManagement from "./screens/Templates/TemplateManagement";
-import CSVUploadPage from "./screens/CSVUploadPage"
 import ColumnManagement from "./screens/Templates/ColumnMapping";
+
+import CSVUploadPage from "./screens/CSVUploadPage"
 
 const router = createBrowserRouter([
   {

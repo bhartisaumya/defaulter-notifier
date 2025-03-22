@@ -10,15 +10,9 @@ import { LayoutDashboard, Menu } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 const allowedFields: Record<string, string> = {
-  defaulter_name: "Defaulter Name",
-  defaulter_age: "Defaulter Age",
   defaulter_phone: "Defaulter Phone No.",
-  guarantor_name1: "Guarantor Name - 1",
   guarantor_phone1: "Guarantor Phone - 1",
-  guarantor_name2: "Guarantor Name - 2",
   guarantor_phone2: "Guarantor Phone - 2",
-  due_date1: "Due Date - 1",
-  due_date2: "Due Date - 2",
 }
 
 export default function FormEditor() {
@@ -34,15 +28,9 @@ export default function FormEditor() {
 
   const [formData, setFormData] = useState<IColumn>({
     _id: "",
-    defaulter_name: "",
-    defaulter_age: "",
     defaulter_phone: "",
-    guarantor_name1: "",
     guarantor_phone1: "",
-    guarantor_name2: "",
     guarantor_phone2: "",
-    due_date1: "",
-    due_date2: "",
   })
 
   const handleChange = (field: string, value: string) => {
@@ -88,7 +76,7 @@ export default function FormEditor() {
 
       const token = sessionStorage.getItem("token")
 
-      console.log(formData.defaulter_age)
+      console.log(formData)
 
       await axios.patch("http://localhost:8000/template-columns", formData, {
         params: { _id: formData._id },
@@ -96,8 +84,6 @@ export default function FormEditor() {
           Authorization: `Bearer ${token}`,
         },
       })
-
-      // console.log(fetchFormData)
 
       setSuccessMessage("Changes saved successfully!")
 
