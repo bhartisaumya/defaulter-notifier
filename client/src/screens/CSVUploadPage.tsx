@@ -16,6 +16,7 @@ export default function CSVTemplatePage() {
   const [csvData, setCSVData] = useState<CSVRow[]>([])
   const [headers, setHeaders] = useState<string[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<ITemplate | null>(null)
+  const [selectedRows, setSelectedRows] = useState<CSVRow[]>([])
   const [selectedRow, setSelectedRow] = useState<CSVRow | null>(null)
   const [previewText, setPreviewText] = useState("")
   const [showPreview, setShowPreview] = useState(false)
@@ -62,6 +63,17 @@ export default function CSVTemplatePage() {
     }
   }
 
+  const checkForNull = (row: any, headers: string[]): boolean => {
+    let isNull = true;
+
+    for(const header of headers){
+      if(row[header])
+        isNull = false;
+    }
+    return isNull;
+  }
+
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -69,8 +81,13 @@ export default function CSVTemplatePage() {
         header: true,
         complete: (results) => {
           const data = results.data as CSVRow[]
+
+          if(checkForNull(data.slice(-1), headers))
+            data.pop()
+
           setCSVData(data)
           if (data.length > 0) {
+            console.log("csvLength:", data)
             setHeaders(Object.keys(data[0]))
           }
         },
@@ -97,6 +114,14 @@ export default function CSVTemplatePage() {
       }
     } catch (err) {
       // setError("Error generating preview")
+    }
+  }
+
+  const handleRowSelection = (row: CSVRow) => {
+    if (selectedRows.some((r) => JSON.stringify(r) === JSON.stringify(row))) {
+      setSelectedRows(selectedRows.filter((r) => JSON.stringify(r) !== JSON.stringify(row)))
+    } else {
+      setSelectedRows([...selectedRows, row])
     }
   }
 
@@ -140,8 +165,6 @@ export default function CSVTemplatePage() {
       setError("Please select both a template and a row")
       return
     }
-    
-    
   }
 
   const handleSend = async () => {
@@ -158,6 +181,38 @@ export default function CSVTemplatePage() {
     }
   }
 
+  const handleSendMultiple = async () => {
+    if (!selectedTemplate || selectedRows.length === 0) {
+      setError("Please select a template and at least one row")
+      return
+    }
+
+    try {
+      // Here you would implement the actual API call to send multiple messages
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      alert(`${selectedRows.length} messages sent successfully!`)
+      setSelectedRows([])
+    } catch (err) {
+      setError("Failed to send messages")
+    }
+  }
+
+  const downloadMultiplePDFs = async () => {
+    if (!selectedTemplate || selectedRows.length === 0) {
+      setError("Please select a template and at least one row")
+      return
+    }
+
+    try {
+      // Here you would implement the actual API call to generate and download PDFs
+      alert(`Downloading ${selectedRows.length} PDFs...`)
+      // In a real implementation, you would likely call an API endpoint that returns
+      // a zip file containing all PDFs, or trigger multiple downloads
+    } catch (err) {
+      setError("Failed to download PDFs")
+    }
+  }
+
   const downloadEmptyCSV = () => {
     if (!selectedTemplate) {
       setError("Please select a template first")
@@ -165,41 +220,25 @@ export default function CSVTemplatePage() {
     }
 
     const pattern = /\{([^}]+)\}/g
-    const matches = [...selectedTemplate.body.matchAll(pattern)].map(m => m[1]);
+    const matches = [...selectedTemplate.body.matchAll(pattern)].map((m) => m[1])
 
-    const csvHeaders = matches.join(',') + '\n'
+    const csvHeaders = matches.join(",") + "\n"
 
-    console.log(csvHeaders)
-
-    const blob = new Blob([csvHeaders], { type: "text/csv" });
+    const blob = new Blob([csvHeaders], { type: "text/csv" })
 
     // Create a download link
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = selectedTemplate.title + "_empty.csv"; // File name
-    document.body.appendChild(a);
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = selectedTemplate.title + "_empty.csv" // File name
+    document.body.appendChild(a)
 
     // Trigger download
-    a.click();
+    a.click()
 
     // Cleanup
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    // console.log(headers)
-
-    // const doc = new jsPDF()
-    // doc.setFontSize(12)
-    // const lineHeight = 7
-    // const pageWidth = doc.internal.pageSize.getWidth()
-    // const margin = 20
-    // const textLines = doc.splitTextToSize(selectedTemplate.body, pageWidth - 2 * margin)
-    // textLines.forEach((line: string, index: number) => {
-    //   doc.text(line, margin, margin + index * lineHeight)
-    // })
-    // doc.save(`empty-template-${selectedTemplate._id}.pdf`)
-
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   const navigateTo = (path: string) => {
@@ -322,13 +361,16 @@ export default function CSVTemplatePage() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Select
+                        </th>
                         {headers.map((header) => (
                           <th
                             key={header}
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            {header}
-                          </th>
+                            >
+                              {header}
+                            </th>
                         ))}
                       </tr>
                     </thead>
@@ -336,11 +378,24 @@ export default function CSVTemplatePage() {
                       {csvData.map((row, index) => (
                         <tr
                           key={index}
-                          onClick={() => handleRowClick(row)}
-                          className={`cursor-pointer hover:bg-gray-50 ${selectedRow === row ? "bg-blue-50" : ""}`}
+                          className={`hover:bg-gray-50 ${
+                            selectedRow === row
+                              ? "bg-blue-50"
+                              : selectedRows.some((r) => JSON.stringify(r) === JSON.stringify(row))
+                                ? "bg-blue-100"
+                                : ""
+                          }`}
                         >
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedRows.some((r) => JSON.stringify(r) === JSON.stringify(row))}
+                              onChange={() => handleRowSelection(row)}
+                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                          </td>
                           {headers.map((header) => (
-                            <td key={header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td key={header} className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
                               {row[header]}
                             </td>
                           ))}
@@ -349,6 +404,23 @@ export default function CSVTemplatePage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+            {csvData.length > 0 && selectedRows.length > 0 && (
+              <div className="bg-white p-4 rounded-lg shadow-sm mt-4 flex justify-end space-x-4">
+                <span className="mr-auto text-sm text-gray-600 self-center">{selectedRows.length} rows selected</span>
+                <button
+                  onClick={downloadMultiplePDFs}
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Download Selected PDFs
+                </button>
+                <button
+                  onClick={handleSendMultiple}
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Send Selected Messages
+                </button>
               </div>
             )}
             {/* Preview Modal */}
