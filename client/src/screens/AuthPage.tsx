@@ -6,7 +6,7 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-import { ICompanyUsers, IUser } from "../interface"
+// import { ICompanyUsers, IUser } from "../interface"
 
 // interface User {
 //   email: string
