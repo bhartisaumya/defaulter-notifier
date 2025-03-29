@@ -167,11 +167,25 @@ export default function CSVTemplatePage() {
     const pattern = /\{([^}]+)\}/g
     const matches = [...selectedTemplate.body.matchAll(pattern)].map(m => m[1]);
 
-    console.log(matches)
+    const csvHeaders = matches.join(',') + '\n'
 
-    const csvHeader = matches.join(',') + '\n'
+    console.log(csvHeaders)
 
-    console.log(csvHeader)
+    const blob = new Blob([csvHeaders], { type: "text/csv" });
+
+    // Create a download link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = selectedTemplate.title + "_empty.csv"; // File name
+    document.body.appendChild(a);
+
+    // Trigger download
+    a.click();
+
+    // Cleanup
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 
     // console.log(headers)
 
