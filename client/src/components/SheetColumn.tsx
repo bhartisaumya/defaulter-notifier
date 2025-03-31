@@ -1,5 +1,5 @@
 
-const SheetHeader = ({columnNames}: {columnNames: string[]}) => {
+export const SheetHeader = ({columnNames}: {columnNames: string[]}) => {
   return (
     <>
         <tr>
@@ -17,7 +17,7 @@ const SheetHeader = ({columnNames}: {columnNames: string[]}) => {
 }
 
 
-const SheetRow = (props: any) => {
+export const SheetRow = (props: any) => {
   const {dataFields, data, handleEdit} = props
   return(
     <>
@@ -38,7 +38,4 @@ const SheetRow = (props: any) => {
 }
 
 
-export{
-  SheetHeader,
-  SheetRow
-}
+

@@ -11,3 +11,10 @@
   height: auto;
   width: auto;
 }
+.ql-container {
+  min-height: 300px !important; /* Ensures editor height */
+}
+
+.ql-editor {
+  min-height: 250px; /* Ensures text area grows */
+}

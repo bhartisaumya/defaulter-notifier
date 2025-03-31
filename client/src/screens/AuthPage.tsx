@@ -6,7 +6,6 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-// import { ICompanyUsers, IUser } from "../interface"
 
 // interface User {
 //   email: string
@@ -28,11 +27,20 @@ export default function LoginPage() {
   if(role)
     navigate(`/${role}`)
 
-  const setNewUser = (user: any) => {
+  const setNewUser = async(user: any) => {
     sessionStorage.setItem('token', user.token)
     sessionStorage.setItem('role', user.role)
     sessionStorage.setItem('name', user.name)
     sessionStorage.setItem('company', user.company)
+    const company = await axios.get(`${base_url}/companies?company=${user.companyId}`,
+      {        headers: {
+        Authorization: `Bearer ${user.token}`,
+      },}
+      
+    )
+    console.log(company.data)
+    sessionStorage.setItem('letterHead', company.data.letterHead)
+    sessionStorage.setItem('companyName', company.data.name)
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -42,6 +50,9 @@ export default function LoginPage() {
 
     try {
       const response = await axios.post(`${base_url}/auth`, { email, password })
+      console.log(response.data)
+      // const companyDetails = await axios.get(`${base_url}/companies/`)
+      // console.log(companyDetails)
       setNewUser(response.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")

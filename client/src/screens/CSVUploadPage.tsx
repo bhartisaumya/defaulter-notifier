@@ -489,10 +489,10 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Papa from "papaparse"
 import axios from "axios"
-import { jsPDF } from "jspdf"
+
 import { LayoutDashboard, FileText, Menu } from "lucide-react"
 import type { ITemplate } from "../interface"
-
+import jsPDF from "jspdf"
 interface CSVRow {
   [key: string]: string
 }
@@ -519,6 +519,15 @@ export default function CSVTemplatePage() {
     fetchCreditPoints()
   }, [])
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(""); // Clear error after 3 seconds
+      }, 3000);
+
+      return () => clearTimeout(timer); // Cleanup on unmount
+    }
+  }, [error]);
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem("token")
@@ -561,7 +570,14 @@ export default function CSVTemplatePage() {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
+    console.log(file)
+
+    if (!selectedTemplate){
+      console.error("No template selected")
+      setError("Please select a template first")
+      return
+    }
+    else if (file) {
       Papa.parse(file, {
         header: true,
         complete: (results) => {
@@ -646,26 +662,57 @@ export default function CSVTemplatePage() {
 
   const downloadTemplate = (selectedRow: CSVRow) => {
     if (!selectedTemplate || !selectedRow) {
-      setError("Please select both a template and a row")
-      return
+      setError("Please select both a template and a row");
+      return;
     }
+  
+    const doc = new jsPDF({
+      orientation: "p",
+      format: "a4",
+      unit: "px",
+      hotfixes: ["px_scaling"],
+    });
+    const text = replaceTemplateVariables(selectedTemplate.body, selectedRow);
+  
+    // Load the letterhead image
+    const letterheadImage = sessionStorage.getItem("letterHead");
+    
+  // Replace with the actual path or base64
+  
+    const imgWidth = doc.internal.pageSize.getWidth();
+    const imgHeight = 50; // Adjust height as needed
+    const marginTop = imgHeight + 10; // Ensure text doesn't overlap with image
+    
+    // Add Letterhead Image
 
-    const doc = new jsPDF()
-    const text = replaceTemplateVariables(selectedTemplate.body, selectedRow)
 
-    doc.setFontSize(12)
-    const lineHeight = 7
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const margin = 20
+    // Text properties
+    try {
+      doc.html(text, {
+        callback(doc) {
+          doc.output("dataurlnewwindow");
+        },
+        x: 0,
+        y:160,
+        autoPaging: "text",
+        margin: 10,
+        
+        width: 500,
+        windowWidth: 595,
+      });
 
-    const textLines = doc.splitTextToSize(text, pageWidth - 2 * margin)
+      if (letterheadImage) {
+        doc.addImage(letterheadImage, "PNG", 0, 0, imgWidth, 150);
+      }
+   
 
-    textLines.forEach((line: string, index: number) => {
-      doc.text(line, margin, margin + index * lineHeight)
-    })
-
-    doc.save(`template-${selectedRow.title || "download"}.pdf`)
-  }
+    // Save the PDF
+    doc.save(`template-${selectedRow.title || "download"}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
+  };
+  
 
   const handleSend = async () => {
     if (!selectedTemplate || !selectedRowIndex) {
@@ -839,13 +886,16 @@ export default function CSVTemplatePage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Upload CSV File</label>
                   <div className="mt-1 flex items-center space-x-4">
+                  <div className="relative inline-block">
                     <input
                       type="file"
                       ref={fileInputRef}
                       accept=".csv"
                       onChange={handleFileUpload}
                       className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      style={{ color: 'transparent' }} // Hide filename
                     />
+                  </div>
                   </div>
                 </div>
                 {/* Template Selection */}

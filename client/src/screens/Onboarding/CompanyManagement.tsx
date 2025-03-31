@@ -23,10 +23,18 @@ export default function CompanyManagement() {
   const role = sessionStorage.getItem("role")
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    legalName: string;
+    address: string;
+    credit: number;
+    letterHead: string | null; // Allow File object or null
+  }>({
     name: "",
+    legalName: "",
     address: "",
-    credit: 0
+    credit: 0,
+    letterHead: null, // Ensure it's initially null
   });
 
   useEffect(() => {
@@ -42,6 +50,7 @@ export default function CompanyManagement() {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(companies.data);
       setCompanies(companies.data);
     } catch (err: any) {
       alert(err.response.data.error.message);
@@ -52,8 +61,10 @@ export default function CompanyManagement() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("hello",formData);
     e.preventDefault();
     setLoading(true);
+
 
     try {
       let url = `${base_url}/companies`;
@@ -86,19 +97,35 @@ export default function CompanyManagement() {
     setFormData({
       name: company.name,
       address: company.address,
-      credit: company.credit
+      credit: company.credit,
+      legalName: company.legalName,
+      letterHead: company.letterHead,
     });
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    console.log(formData);
     setIsModalOpen(false);
     setEditingCompany(null);
     setFormData({
       name: "",
       address: "",
-      credit: 0
+      credit: 0,
+      legalName: "",
+      letterHead: null,
     });
+  };
+
+  const handleLetterheadUpload = (e : any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setFormData({ ...formData, letterHead: reader.result as string})
+      };
+    }
   };
 
   const filteredCompanies = companies.filter(
@@ -242,7 +269,7 @@ export default function CompanyManagement() {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 ">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Name
@@ -283,6 +310,37 @@ export default function CompanyManagement() {
                   required
                 />
               </div>
+
+              <div>
+                <label htmlFor="legalName" className="block text-sm font-medium text-gray-700">
+                    Legal Name
+                  </label>
+                  <input
+                    type="text"
+                    id="legalName"
+                    value={formData.legalName}
+                    onChange={(e) => setFormData({ ...formData, legalName: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="letterHead" className="block text-sm font-medium text-gray-700">
+                    Letterhead (JPG/PNG)
+                  </label>
+                  <input
+                    type="file"
+                    id="letterHead"
+                    accept=".jpg, .jpeg, .png"
+                    onChange={handleLetterheadUpload}
+                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    required
+                  />
+                  {formData.letterHead && (
+        <img src={formData.letterHead} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-md" />
+      )}
+                </div>
 
               <div className="flex justify-end space-x-3 mt-6">
                 <button

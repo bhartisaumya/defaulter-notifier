@@ -24,6 +24,8 @@ export interface ICompany{
     name: string,
     address: string,
     credit: number
+    legalName: string,
+    letterHead: string,
 }
 
 export interface ITemplate{
