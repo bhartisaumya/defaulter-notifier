@@ -5,7 +5,7 @@ import { Roles } from "../interface";
 
 const router = Router();
 
-router.get("/", restrictTo([Roles.ADMIN, Roles.SUPER_ADMIN]), getCompanies);
+router.get("/", getCompanies);
 router.post("/", restrictTo([Roles.SUPER_ADMIN]), addNewCompany);
 router.patch("/", restrictTo([Roles.SUPER_ADMIN]), updateCompany);
 router.delete("/", restrictTo([Roles.SUPER_ADMIN]), deleteCompany);

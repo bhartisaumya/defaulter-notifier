@@ -7,9 +7,9 @@ import createError from 'http-errors'
 const getCompanies = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
   try {
     const company = req.query.company
-
+    console.log(req.query)
     if(company){
-      const gotCompany = await CompanyModel.findOne({name: company});
+      const gotCompany = await CompanyModel.findOne({_id: company});
 
       res.status(200).json(gotCompany)
 
@@ -18,7 +18,7 @@ const getCompanies = async (req: Request, res: Response, next: NextFunction) : P
     }
 
     const companies = await CompanyModel.find()    
-
+    console.log(companies)
     res.status(200).json(companies);
   } catch (error) {
     next(error);
@@ -28,14 +28,14 @@ const getCompanies = async (req: Request, res: Response, next: NextFunction) : P
 
 const addNewCompany = async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const {name, address} = req.body
+    const {name, address, legalName, credit, letterHead} = req.body
 
     const company = await CompanyModel.findOne({name})
 
     if(company)
       throw createError.Conflict("Company already exists");
 
-    const newCompany = new CompanyModel({name, address});
+    const newCompany = new CompanyModel({name, address, legalName, credit, letterHead});
     await newCompany.save();
     
     res.status(201).json({message: "Company added successfully"});
@@ -63,9 +63,9 @@ const deleteCompany = async(req: Request, res: Response, next: NextFunction) => 
 const updateCompany = async(req: Request, res: Response, next: NextFunction) => {
   try {
     const _id = req.query.id as string
-    const {name, address, credit} = req.body
+    const {name, address, credit, legalName, letterHead} = req.body
 
-    const updatedCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit})
+    const updatedCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit, legalName, letterHead})
 
     if(!updatedCompany)
       throw createError.NotFound("Company not found");

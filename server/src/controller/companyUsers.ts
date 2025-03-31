@@ -37,7 +37,7 @@ const addNewCompanyUser = async(req: Request, res: Response, next: NextFunction)
       throw createError.NotFound("Company not found");
 
 
-    const newUser = new UsersModel({email, name, password, role, company});
+    const newUser = new UsersModel({email, name, password, role, company, companyId: userCompany._id});
     await newUser.save();
 
     res.status(201).json({message: "User added successfully"});

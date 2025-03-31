@@ -13,6 +13,7 @@ interface IUsers extends Document {
     password: string;
     role: Role;
     company: string;
+    companyId: string;
     isValidPassword(password: string): Promise<boolean>;
 }
 
@@ -21,6 +22,7 @@ const UsersSchema = new Schema<IUsers>({
     name: {type: String, required: true},
     password: {type: String, required: true},
     company: {type: String, required: true},
+    companyId: {type: String, required: true},
     role: {type: String, enum: Role, required: true}
 })
 

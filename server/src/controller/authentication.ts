@@ -25,7 +25,7 @@ const login = async (req: Request, res: Response, next: NextFunction) : Promise<
 
         const token = await authModule.signAccessToken(user.email, user.role);
 
-        res.status(200).json({token, role: user.role, name: user.name, company: user.company});
+        res.status(200).json({token, role: user.role, name: user.name, company: user.company, companyId: user.companyId});
 
     } catch (error) {
         next(error);
