@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 
 import CompanyModel from "../models/companies"
 import createError from 'http-errors'
+import UserModel from "../models/users";
+import TemplateModel from "../models/messageTemplate";
 
 
 const getCompanies = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
@@ -65,10 +67,22 @@ const updateCompany = async(req: Request, res: Response, next: NextFunction) => 
     const _id = req.query.id as string
     const {name, address, credit, legalName, letterHead} = req.body
 
-    const updatedCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit, legalName, letterHead})
+    const unalteredCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit, legalName, letterHead})
 
-    if(!updatedCompany)
+    if(!unalteredCompany)
       throw createError.NotFound("Company not found");
+
+    if(name){
+      UserModel.updateMany(
+        {company: unalteredCompany.name},
+        {company: name}
+      )
+
+      TemplateModel.updateMany(
+        {company: unalteredCompany.name},
+        {company: name}
+      )
+    }
 
     res.status(200).json({message: "Successfully updated"});
   } catch (error) {
