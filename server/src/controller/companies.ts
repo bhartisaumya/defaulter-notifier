@@ -6,26 +6,28 @@ import UserModel from "../models/users";
 import TemplateModel from "../models/messageTemplate";
 
 
-const getCompanies = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
+const getCompanies = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const company = req.query.company
-    console.log(req.query)
-    if(company){
-      const gotCompany = await CompanyModel.findOne({_id: company});
+    const company = req.query.company?.toString().trim(); // Ensure it's a string and remove whitespace
 
-      res.status(200).json(gotCompany)
+    if (company) {
+      const gotCompany = await CompanyModel.findOne({ name: company });
 
-      if (!company)
-        throw createError.NotFound("Companies not found");
+      if (!gotCompany) {
+        res.status(404).json({ message: "Company not found" });
+        return
+      }
+
+      res.status(200).json(gotCompany);
+      return
     }
 
-    const companies = await CompanyModel.find()    
-    console.log(companies)
+    const companies = await CompanyModel.find();
     res.status(200).json(companies);
   } catch (error) {
     next(error);
   }
-}
+};
 
 
 const addNewCompany = async(req: Request, res: Response, next: NextFunction) => {
