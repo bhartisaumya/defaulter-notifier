@@ -3,7 +3,7 @@
 import axios from "axios"
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
 
@@ -24,8 +24,11 @@ export default function LoginPage() {
 
   const role = sessionStorage.getItem('role')
 
-  if(role)
-    navigate(`/${role}`)
+  useEffect(() => {
+    if (role) {
+      navigate(`/${role}`);
+    }
+  }, [role]); 
 
   const setNewUser = async(user: any) => {
     sessionStorage.setItem('token', user.token)
