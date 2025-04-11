@@ -7,8 +7,8 @@ import axios from 'axios';
 import { ICompany } from "../../interface";
 import { SheetHeader, SheetRow } from '../../components/SheetColumn';
 import SearchBar from '../../components/SearchBar';
+import { BASE_PATH } from '../../constants/constants';
 
-const base_url = import.meta.env.VITE_BASE_URL;
 
 export default function CompanyManagement() {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ export default function CompanyManagement() {
     setLoading(true);
     try {
       const token = sessionStorage.getItem('token');
-      const companies = await axios.get(`${base_url}/companies`, {
+      const companies = await axios.get(`${BASE_PATH}/companies`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -67,7 +67,7 @@ export default function CompanyManagement() {
 
 
     try {
-      let url = `${base_url}/companies`;
+      let url = `${BASE_PATH}/companies`;
       url += editingCompany ? `/?id=${editingCompany._id}` : "";
 
       const token = sessionStorage.getItem('token');
@@ -335,7 +335,6 @@ export default function CompanyManagement() {
                     accept=".jpg, .jpeg, .png"
                     onChange={handleLetterheadUpload}
                     className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    required
                   />
                   {formData.letterHead && (
         <img src={formData.letterHead} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-md" />

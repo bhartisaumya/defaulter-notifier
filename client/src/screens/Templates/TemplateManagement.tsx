@@ -8,8 +8,8 @@ import "react-quill/dist/quill.snow.css";
 import { ITemplate } from "../../interface";
 import { SheetHeader, SheetRow } from '../../components/SheetColumn';
 import SearchBar from '../../components/SearchBar';
+import { BASE_PATH } from '../../constants/constants';
 
-const base_url = "http://localhost:8000";
 
 export default function TemplateManagement() {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function TemplateManagement() {
       const token = sessionStorage.getItem('token');
       const company = sessionStorage.getItem('company');
 
-      const url = `${base_url}/templates/?company=${company}`;
+      const url = `${BASE_PATH}/templates/?company=${company}`;
       const template = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ export default function TemplateManagement() {
     setLoading(true);
 
     try {
-      let url = `${base_url}/templates`;
+      let url = `${BASE_PATH}/templates`;
       url += editingTemplates ? `/?_id=${editingTemplates._id}` : "";
 
       const token = sessionStorage.getItem('token');

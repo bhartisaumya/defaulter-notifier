@@ -5,6 +5,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { BASE_PATH } from "../constants/constants"
 
 
 // interface User {
@@ -13,7 +14,6 @@ import { useNavigate } from "react-router-dom"
 //   name: string
 // }
 
-const base_url = "http://localhost:8000"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -35,7 +35,7 @@ export default function LoginPage() {
     sessionStorage.setItem('role', user.role)
     sessionStorage.setItem('name', user.name)
     sessionStorage.setItem('company', user.company)
-    const company = await axios.get(`${base_url}/companies?company=${user.companyId}`,
+    const company = await axios.get(`${BASE_PATH}/companies?company=${user.companyId}`,
       {        headers: {
         Authorization: `Bearer ${user.token}`,
       },}
@@ -52,9 +52,9 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const response = await axios.post(`${base_url}/auth`, { email, password })
+      const response = await axios.post(`${BASE_PATH}/auth`, { email, password })
       console.log(response.data)
-      // const companyDetails = await axios.get(`${base_url}/companies/`)
+      // const companyDetails = await axios.get(`${BASE_PATH}/companies/`)
       // console.log(companyDetails)
       setNewUser(response.data)
     } catch (err) {

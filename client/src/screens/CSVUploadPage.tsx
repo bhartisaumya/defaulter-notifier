@@ -1,5 +1,5 @@
 "use client"
-
+// @ts-nocheck
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Papa from "papaparse"
@@ -8,12 +8,14 @@ import axios from "axios"
 import { LayoutDashboard, FileText, Menu } from "lucide-react"
 import type { ITemplate } from "../interface"
 import jsPDF from "jspdf"
+import { BASE_PATH} from "../constants/constants"
+
 interface CSVRow {
   [key: string]: string
 }
 
 export default function CSVTemplatePage() {
-  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
+  const [selectedRowIndex] = useState<number | null>(null);
   const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
 
   const [templates, setTemplates] = useState<ITemplate[]>([])
@@ -26,7 +28,6 @@ export default function CSVTemplatePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [creditPoints, setCreditPoints] = useState(0) // New state for credit points
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const base_url = "http://localhost:8000"
   const role = sessionStorage.getItem("role")
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function CSVTemplatePage() {
     try {
       const token = sessionStorage.getItem("token")
       const company = sessionStorage.getItem("company")
-      const response = await axios.get(`${base_url}/templates/?company=${company}`, {
+      const response = await axios.get(`${BASE_PATH}/templates/?company=${company}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,7 +64,7 @@ export default function CSVTemplatePage() {
       const token = sessionStorage.getItem("token")
       const company = sessionStorage.getItem("company")
 
-      const response = await axios.get(`${base_url}/companies/?company=${company}`, {
+      const response = await axios.get(`${BASE_PATH}/companies/?company=${company}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -97,14 +98,24 @@ export default function CSVTemplatePage() {
         header: true,
         complete: (results) => {
           const data = results.data as CSVRow[]
-
+          console.log(data)
           // removing the bear \n if the row is empty
           if (checkForNull(data.slice(-1), headers)) data.pop()
-
+          console.log(data)
+          // Check if the CSV has headers
+          if (data.length > 0) {
+            const firstRow = data[0]
+            const keys = Object.keys(firstRow)
+            if (keys.length === 0) {
+              setError("CSV file has no headers")
+              return
+            }
+          }
           setCSVData(data)
           if (data.length > 0) {
             setHeaders(Object.keys(data[0]))
           }
+
         },
         error: (error) => {
           console.error("Error parsing CSV:", error)
@@ -187,6 +198,12 @@ export default function CSVTemplatePage() {
       unit: "px",
       hotfixes: ["px_scaling"],
     });
+    doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
+  doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
+   // Set the font for Hindi text
+   doc.setFont('NotoSansDevanagari');
+   
+
     const text = replaceTemplateVariables(selectedTemplate.body, selectedRow);
   
     // Load the letterhead image
@@ -195,18 +212,25 @@ export default function CSVTemplatePage() {
   // Replace with the actual path or base64
   
     const imgWidth = doc.internal.pageSize.getWidth();
-    const imgHeight = 50; // Adjust height as needed
-    const marginTop = imgHeight + 10; // Ensure text doesn't overlap with image
+    // @ts-ignore
+    const imgHeight = 50; // Adjust height as needed Ensure text doesn't overlap with image
     
     // Add Letterhead Image
 
 
     // Text properties
     try {
+    // @ts-ignore
       doc.html(text, {
+        // @ts-ignore
         callback(doc) {
+          doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
+          doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
+           // Set the font for Hindi text
+           doc.setFont('NotoSansDevanagari');
           doc.output("dataurlnewwindow");
         },
+        
         x: 0,
         y:160,
         autoPaging: "text",
@@ -285,7 +309,7 @@ export default function CSVTemplatePage() {
     }
 
     const pattern = /\{([^}]+)\}/g
-    const matches = [...selectedTemplate.body.matchAll(pattern)].map((m) => m[1])
+    const matches = [...new Set([...selectedTemplate.body.matchAll(pattern)].map((m) => m[1]))]
 
     const csvHeaders = matches.join(",") + "\n"
 
@@ -513,6 +537,7 @@ export default function CSVTemplatePage() {
                   </div>
                   <div className="flex justify-end space-x-4">
                     <button
+                    // @ts-ignore
                       onClick={downloadTemplate}
                       className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >

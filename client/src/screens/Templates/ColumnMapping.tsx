@@ -8,6 +8,7 @@ import axios from "axios"
 import type { IColumn } from "../../interface"
 import { LayoutDashboard, Menu } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { BASE_PATH } from "../../constants/constants"
 
 const allowedFields: Record<string, string> = {
   defaulter_phone: "Defaulter Phone No.",
@@ -49,7 +50,7 @@ export default function FormEditor() {
       const company = sessionStorage.getItem("company")
       const token = sessionStorage.getItem("token")
 
-      const response = await axios.get("http://localhost:8000/template-columns", {
+      const response = await axios.get(`http://{${BASE_PATH}/template-columns`, {
         params: { company },
         headers: {
           Authorization: `Bearer ${token}`,
@@ -78,7 +79,7 @@ export default function FormEditor() {
 
       console.log(formData)
 
-      await axios.patch("http://localhost:8000/template-columns", formData, {
+      await axios.patch(`http://${BASE_PATH}/template-columns`, formData, {
         params: { _id: formData._id },
         headers: {
           Authorization: `Bearer ${token}`,

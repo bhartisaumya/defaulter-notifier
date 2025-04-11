@@ -41,14 +41,14 @@
 //     try {
 //       const token = sessionStorage.getItem('token')
 
-//       const users = await axios.get(`${base_url}/company-users`, {
+//       const users = await axios.get(`${BASE_PATH}/company-users`, {
 //         headers: {
 //           Authorization: `Bearer ${token}`, // Include the JWT token in the Authorization header
 //         },
 //       });
 //       setUsers(users.data)
 
-//       const companies = await axios.get(`${base_url}/companies`, {
+//       const companies = await axios.get(`${BASE_PATH}/companies`, {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
 //         },
@@ -71,7 +71,7 @@
 //     setLoading(true)
 
 //     try {
-//       let url = `${base_url}/company-users`
+//       let url = `${BASE_PATH}/company-users`
 //       url += editingUser ? `/?id=${editingUser._id}` : ""
 
 //       const token = sessionStorage.getItem('token')
@@ -336,11 +336,10 @@ import axios from 'axios'
 
 import {Roles, ICompanyUsers} from "../../interface"
 import { useNavigate } from 'react-router-dom';
+import { BASE_PATH } from '../../constants/constants';
 
 
-const base_url = import.meta.env.VITE_BASE_URL
 
-console.log(base_url)
 
 
 export default function UserManagementPage() {
@@ -374,14 +373,14 @@ export default function UserManagementPage() {
     try {
       const token = sessionStorage.getItem('token')
 
-      const users = await axios.get(`${base_url}/company-users`, {
+      const users = await axios.get(`${BASE_PATH}/company-users`, {
         headers: {
           Authorization: `Bearer ${token}`, // Include the JWT token in the Authorization header
         },
       });
       setUsers(users.data)
 
-      const companies = await axios.get(`${base_url}/companies`, {
+      const companies = await axios.get(`${BASE_PATH}/companies`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -404,7 +403,7 @@ export default function UserManagementPage() {
     setLoading(true)
 
     try {
-      let url = `${base_url}/company-users`
+      let url = `${BASE_PATH}/company-users`
       url += editingUser ? `/?id=${editingUser._id}` : ""
 
       const token = sessionStorage.getItem('token')
