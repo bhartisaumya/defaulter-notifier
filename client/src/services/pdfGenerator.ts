@@ -1,0 +1,198 @@
+// import jsPDF from "jspdf";
+
+// // const tiroDevanagariFontFace = `
+// //   <style>
+// //     @font-face {
+// //       font-family: 'Tiro';
+// //       src: url('data:font/truetype;charset=utf-8;base64,AAEAAAARAQAAB...FULL_BASE64_STRING_HERE...');
+// //     }
+// //     body, p, div, strong, u {
+// //       font-family: 'Tiro', sans-serif;
+// //     }
+// //   </style>
+// // `;
+
+
+// // const downloadPDF = () => {
+// //   if (!selectedTemplate || !selectedRow) {
+// //     setError("Please select both a template and a row");
+// //     return;
+// //   }
+
+// //   const doc = new jsPDF({
+// //     orientation: "p",
+// //     format: "a4",
+// //     unit: "px",
+// //     hotfixes: ["px_scaling"],
+// //   });
+
+// //   const imgWidth = doc.internal.pageSize.getWidth();
+// //   const letterheadImage = sessionStorage.getItem("letterHead");
+
+
+// //   // Inject font style + wrapped HTML
+// //   const styledHtml = `
+// //     ${tiroDevanagariFontFace}
+// //     <body>${htmlContent}</body>
+// //   `;
+
+// //   // Add Letterhead Image before rendering HTML (if any)
+// //   if (letterheadImage) {
+// //     doc.addImage(letterheadImage, "PNG", 0, 0, imgWidth, 150); // adjust height if needed
+// //   }
+
+// //   try {
+// //     doc.html(styledHtml, {
+// //       callback: function (doc) {
+// //         doc.save(`template-${selectedRow.title || "download"}.pdf`);
+// //       },
+// //       x: 10,
+// //       y: 160, // push content down below the letterhead
+// //       width: 500,
+// //       windowWidth: 595,
+// //     });
+// //   } catch (error) {
+// //     console.error("Error generating PDF:", error);
+// //   }
+// // };
+
+
+
+
+
+// const downloadPDF = (htmlFormatedText: string) => {
+//     const doc = new jsPDF({
+//       orientation: "p",
+//       format: "a4",
+//       unit: "px",
+//       hotfixes: ["px_scaling"],
+//     });
+
+//     doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
+//     doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
+//     // Set the font for Hindi text
+//     doc.setFont('NotoSansDevanagari');
+   
+
+  
+//   //   // Load the letterhead image q
+//     const letterheadImage = sessionStorage.getItem("letterHead");
+    
+//   // // Replace with the actual path or base64
+  
+//     const imgWidth = doc.internal.pageSize.getWidth();
+//     // @ts-ignore
+//     const imgHeight = 50; // Adjust height as needed Ensure text doesn't overlap with image
+    
+//   //   // Add Letterhead Image
+
+
+//   //   // Text properties
+//     try {
+//     // @ts-ignore
+//       doc.html(htmlFormatedText, {
+//         // @ts-ignore
+//         callback(doc) {
+//           doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
+//           doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
+//            // Set the font for Hindi text
+//            doc.setFont('NotoSansDevanagari');
+//           doc.output("dataurlnewwindow");
+//         },
+        
+//         x: 0,
+//         y:160,
+//         autoPaging: "text",
+//         margin: 10,
+        
+//         width: 500,
+//         windowWidth: 595,
+//       });
+
+//       if (letterheadImage) {
+//         doc.addImage(letterheadImage, "PNG", 0, 0, imgWidth, 150);
+//       }
+   
+
+//       // Save the PDF
+//       doc.save(`template-"download".pdf`);
+//     } catch (error) {
+//       console.error("Error generating PDF:", error);
+//     }
+//   };
+
+
+//   export{
+//     downloadPDF
+//   }
+
+
+
+
+
+
+
+
+
+
+
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
+
+// Function to convert HTML to PDF with proper Indic language support
+export const downloadPDF = async (htmlFormatedText: string) => {
+  try {
+    // Create a temporary container for the HTML content
+    const container = document.createElement("div")
+    container.innerHTML = htmlFormatedText
+    container.style.width = "595px" // A4 width in pixels at 72 DPI
+    container.style.fontFamily = "'Noto Sans Devanagari', Arial, sans-serif"
+    container.style.padding = "20px"
+    document.body.appendChild(container)
+
+    // Get letterhead from session storage if available
+    const letterheadImage = sessionStorage.getItem("letterHead")
+
+    // Create a new PDF document
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: "a4",
+    })
+
+    // First, render the HTML content to a canvas
+    const canvas = await html2canvas(container, {
+      scale: 2, // Higher scale for better quality
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+    })
+
+    // Remove the temporary container
+    document.body.removeChild(container)
+
+    // Get dimensions
+    const imgWidth = doc.internal.pageSize.getWidth()
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+    
+    console.log("letterhead:", letterheadImage)
+
+    // Add letterhead if available
+    let yOffset = 0
+    if (letterheadImage) {
+      const headerHeight = 150
+      doc.addImage(letterheadImage, "PNG", 0, 0, imgWidth, headerHeight)
+      yOffset = headerHeight
+    }
+
+    // Add the rendered HTML content
+    const contentDataUrl = canvas.toDataURL("image/png")
+    doc.addImage(contentDataUrl, "PNG", 0, yOffset, imgWidth, imgHeight)
+
+    // Save the PDF
+    doc.save("document.pdf")
+  } catch (error) {
+    console.error("Error generating PDF:", error)
+  }
+}
