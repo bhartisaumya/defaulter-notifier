@@ -7,7 +7,7 @@ import axios from "axios"
 
 import { LayoutDashboard, FileText, Menu } from "lucide-react"
 import type { ITemplate } from "../interface"
-import jsPDF from "jspdf"
+import { downloadPDF } from "../services/pdfGenerator"
 import { BASE_PATH} from "../constants/constants"
 
 interface CSVRow {
@@ -22,8 +22,6 @@ export default function CSVTemplatePage() {
   const [csvData, setCSVData] = useState<CSVRow[]>([])
   const [headers, setHeaders] = useState<string[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<ITemplate | null>(null)
-  const [previewText, setPreviewText] = useState("")
-  const [showPreview, setShowPreview] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [creditPoints, setCreditPoints] = useState(0) // New state for credit points
@@ -125,24 +123,6 @@ export default function CSVTemplatePage() {
     }
   }
 
-  // const handleRowClick = (row: CSVRow) => {
-  //   if (!selectedTemplate) {
-  //     setError("Please select a template first")
-  //     return
-  //   }
-  //   setError(null)
-  //   setSelectedRow(row)
-  //   try {
-  //     const text = replaceTemplateVariables(selectedTemplate.body, row)
-  //     setPreviewText(text)
-  //     if (!error) {
-  //       setShowPreview(true)
-  //     }
-  //   } catch (err) {
-  //     setError("Error generating preview")
-  //   }
-  // }
-
   const handleRowSelection = (index: number) => {
     setSelectedRowIndices((prev) =>
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
@@ -155,8 +135,9 @@ export default function CSVTemplatePage() {
     let hasError = false
     const result = template.replace(/\{(\w+)\}/g, (match, key) => {
       if (!data[key]) {
-        hasError = true
-        setError(`Field "${key}" not present in CSV data`)
+        // hasError = true
+        // console.log(`Field "${key}" not present in CSV data`)
+        // setError(`Field "${key}" not present in CSV data`)
         return match
       }
       return data[key]
@@ -171,18 +152,10 @@ export default function CSVTemplatePage() {
 
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const templateId = e.target.value
-    if (!templateId) {
-      setSelectedTemplate(null)
-      setPreviewText("")
-      return
-    }
+
     const template = templates.find((t) => t._id === templateId)
     if (template) {
       setSelectedTemplate(template)
-      // if () {
-      //   const text = replaceTemplateVariables(template.body, selectedRow)
-      //   setPreviewText(text)
-      // }
     }
   }
 
@@ -191,81 +164,25 @@ export default function CSVTemplatePage() {
       setError("Please select both a template and a row");
       return;
     }
-  
-    const doc = new jsPDF({
-      orientation: "p",
-      format: "a4",
-      unit: "px",
-      hotfixes: ["px_scaling"],
-    });
-    doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
-  doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
-   // Set the font for Hindi text
-   doc.setFont('NotoSansDevanagari');
-   
 
-    const text = replaceTemplateVariables(selectedTemplate.body, selectedRow);
-  
-    // Load the letterhead image
-    const letterheadImage = sessionStorage.getItem("letterHead");
-    
-  // Replace with the actual path or base64
-  
-    const imgWidth = doc.internal.pageSize.getWidth();
-    // @ts-ignore
-    const imgHeight = 50; // Adjust height as needed Ensure text doesn't overlap with image
-    
-    // Add Letterhead Image
+    const htmlFormatedText = replaceTemplateVariables(selectedTemplate.body, selectedRow)
 
-
-    // Text properties
-    try {
-    // @ts-ignore
-      doc.html(text, {
-        // @ts-ignore
-        callback(doc) {
-          doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
-          doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
-           // Set the font for Hindi text
-           doc.setFont('NotoSansDevanagari');
-          doc.output("dataurlnewwindow");
-        },
-        
-        x: 0,
-        y:160,
-        autoPaging: "text",
-        margin: 10,
-        
-        width: 500,
-        windowWidth: 595,
-      });
-
-      if (letterheadImage) {
-        doc.addImage(letterheadImage, "PNG", 0, 0, imgWidth, 150);
-      }
-   
-
-    // Save the PDF
-    doc.save(`template-${selectedRow.title || "download"}.pdf`);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-    }
+    downloadPDF(htmlFormatedText)
   };
   
 
-  const handleSend = async () => {
-    if (!selectedTemplate || !selectedRowIndex) {
-      setError("Please select both a template and a row")
-      return
-    }
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      alert("Message sent successfully!")
-      setShowPreview(false)
-    } catch (err) {
-      setError("Failed to send message")
-    }
-  }
+  // const handleSend = async () => {
+  //   if (!selectedTemplate || !selectedRowIndex) {
+  //     setError("Please select both a template and a row")
+  //     return
+  //   }
+  //   try {
+  //     await new Promise((resolve) => setTimeout(resolve, 1000))
+  //     alert("Message sent successfully!")
+  //   } catch (err) {
+  //     setError("Failed to send message")
+  //   }
+  // }
 
   const handleSendMultiple = async () => {
     if (!selectedTemplate || selectedRowIndices.length === 0) {
@@ -293,6 +210,7 @@ export default function CSVTemplatePage() {
       // Create and download PDFs for each selected row
       selectedRowIndices.forEach((index) => {
         downloadTemplate(csvData[index])
+        console.log(index)
       });
   
       alert(`Downloading ${selectedRowIndices.length} PDFs...`);
@@ -517,40 +435,6 @@ export default function CSVTemplatePage() {
                 >
                   Send Selected Messages
                 </button>
-              </div>
-            )}
-            {/* Preview Modal */}
-            {showPreview && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Preview</h2>
-                    <button onClick={() => setShowPreview(false)} className="text-gray-400 hover:text-gray-500">
-                      <span className="sr-only">Close</span>
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="bg-gray-50 p-6 rounded-md mb-6 max-h-[50vh] overflow-y-auto">
-                    <p className="text-gray-800 whitespace-pre-wrap">{previewText}</p>
-                  </div>
-                  <div className="flex justify-end space-x-4">
-                    <button
-                    // @ts-ignore
-                      onClick={downloadTemplate}
-                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Download PDF
-                    </button>
-                    <button
-                      onClick={handleSend}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Send
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
           </div>
