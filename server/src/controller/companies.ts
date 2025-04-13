@@ -4,6 +4,7 @@ import CompanyModel from "../models/companies"
 import createError from 'http-errors'
 import UserModel from "../models/users";
 import TemplateModel from "../models/messageTemplate";
+import { ObjectId } from "bson";
 
 
 const getCompanies = async (req: Request, res: Response, next: NextFunction) => {
@@ -11,7 +12,7 @@ const getCompanies = async (req: Request, res: Response, next: NextFunction) => 
     const company = req.query.company?.toString().trim(); // Ensure it's a string and remove whitespace
 
     if (company) {
-      const gotCompany = await CompanyModel.findOne({ name: company });
+      const gotCompany = await CompanyModel.findOne({ _id: new ObjectId(company) });
 
       if (!gotCompany) {
         res.status(404).json({ message: "Company not found" });

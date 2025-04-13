@@ -100,7 +100,7 @@ export const downloadPDF = async (htmlFormatedText: string) => {
 
     // First, render the HTML content to a canvas
     const canvas = await html2canvas(container, {
-      scale: 2, // Higher scale for better quality
+      scale: 1, // Higher scale for better quality
       useCORS: true,
       logging: false,
       allowTaint: true,
