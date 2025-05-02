@@ -645,7 +645,7 @@ export default function CSVTemplatePage() {
     console.log(selectedRow)
     const htmlFormatedText = replaceTemplateVariables(selectedTemplate.body, selectedRow)
 
-    downloadPDF(htmlFormatedText, selectedRow, selectedTemplate.title,pdfNameColumn)
+    downloadPDF(htmlFormatedText, selectedRow, selectedTemplate.title,pdfNameColumn, setError)
   }
 
   // const handleSend = async () => {

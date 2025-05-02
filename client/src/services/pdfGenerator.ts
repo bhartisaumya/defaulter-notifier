@@ -79,7 +79,7 @@ import html2canvas from "html2canvas"
 import { CSVRow } from "../screens/CSVUploadPage"
 
 // Function to convert HTML to PDF with proper Indic language support
-export const downloadPDF = async (htmlFormatedText: string, row:   CSVRow, templateName: string, pdfNameColumn: string) => {
+export const downloadPDF = async (htmlFormatedText: string, row:   CSVRow, templateName: string, pdfNameColumn: string, erroFunc: any) => {
   try {
     // Create a temporary container for the HTML content
     const container = document.createElement("div")
@@ -131,6 +131,10 @@ export const downloadPDF = async (htmlFormatedText: string, row:   CSVRow, templ
 
     console.log(row)
     var username = row[pdfNameColumn]
+    if (!username){
+      console.error("Username not found in the row data")
+      erroFunc("Username not found in the row data")
+    }
     // Save the PDF
     console.log("Saving PDF with name:", `${username}-${templateName}.pdf`)
     doc.save(`${username}-${templateName}.pdf`)
