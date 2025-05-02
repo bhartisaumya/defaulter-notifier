@@ -1,79 +1,3 @@
-// const downloadPDF = (htmlFormatedText: string) => {
-//     const doc = new jsPDF({
-//       orientation: "p",
-//       format: "a4",
-//       unit: "px",
-//       hotfixes: ["px_scaling"],
-//     });
-
-//     doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
-//     doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
-//     // Set the font for Hindi text
-//     doc.setFont('NotoSansDevanagari');
-   
-
-  
-//   //   // Load the letterhead image q
-//     const letterheadImage = sessionStorage.getItem("letterHead");
-    
-//   // // Replace with the actual path or base64
-  
-//     const imgWidth = doc.internal.pageSize.getWidth();
-//     // @ts-ignore
-//     const imgHeight = 50; // Adjust height as needed Ensure text doesn't overlap with image
-    
-//   //   // Add Letterhead Image
-
-
-//   //   // Text properties
-//     try {
-//     // @ts-ignore
-//       doc.html(htmlFormatedText, {
-//         // @ts-ignore
-//         callback(doc) {
-//           doc.addFileToVFS('NotoSansDevanagari-Regular.ttf', '../assets/TiroDevanagariHindi-Regular.ttf');
-//           doc.addFont('../assets/TiroDevanagariHindi-Regular.ttf', 'NotoSansDevanagari', 'normal');
-//            // Set the font for Hindi text
-//            doc.setFont('NotoSansDevanagari');
-//           doc.output("dataurlnewwindow");
-//         },
-        
-//         x: 0,
-//         y:160,
-//         autoPaging: "text",
-//         margin: 10,
-        
-//         width: 500,
-//         windowWidth: 595,
-//       });
-
-//       if (letterheadImage) {
-//         doc.addImage(letterheadImage, "PNG", 0, 0, imgWidth, 150);
-//       }
-   
-
-//       // Save the PDF
-//       doc.save(`template-"download".pdf`);
-//     } catch (error) {
-//       console.error("Error generating PDF:", error);
-//     }
-//   };
-
-
-//   export{
-//     downloadPDF
-//   }
-
-
-
-
-
-
-
-
-
-
-
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 import { CSVRow } from "../screens/CSVUploadPage"
@@ -82,34 +6,69 @@ import { CSVRow } from "../screens/CSVUploadPage"
 export const downloadPDF = async (htmlFormatedText: string, row:   CSVRow, templateName: string, pdfNameColumn: string, erroFunc: any) => {
   try {
     // Create a temporary container for the HTML content
-    const container = document.createElement("div")
-    container.innerHTML = htmlFormatedText
-    container.style.width = "595px" // A4 width in pixels at 72 DPI
-    container.style.fontFamily = "'Noto Sans Devanagari', Arial, sans-serif"
-    container.style.padding = "20px"
-    document.body.appendChild(container)
-    container.style.fontSize = "12px";
+   // 1. Inject Quill stylesheet early so it loads before rendering
+const quillStyle = document.createElement("link");
+quillStyle.rel = "stylesheet";
+quillStyle.href = "https://cdn.quilljs.com/1.3.6/quill.snow.css";
+document.head.appendChild(quillStyle);
 
-    // Get letterhead from session storage if available
-    const letterheadImage = sessionStorage.getItem("letterHead")
 
-    // Create a new PDF document
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "px",
-      format: "a4",
-    })
+// 2. Wait a short time to allow CSS to load (optional but safer)
+await new Promise(resolve => setTimeout(resolve, 100));
 
-    // First, render the HTML content to a canvas
-    const canvas = await html2canvas(container, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true,
-      logging: false,
-      allowTaint: true,
-    })
+// 3. Create and style container
+const container = document.createElement("div");
+container.innerHTML = htmlFormatedText;
+container.style.width = "595px"; // A4 width in pixels at 72 DPI
+container.style.fontFamily = "'Noto Sans Devanagari', Arial, sans-serif";
+container.style.padding = "20px";
+container.style.fontSize = "12px";
+document.body.appendChild(container);
+const quillStyles = `
+  .ql-align-center {
+    text-align: center !important;
+  }
 
-    // Remove the temporary container
-    document.body.removeChild(container)
+  .ql-align-left {
+    text-align: left !important;
+  }
+
+  .ql-align-right {
+    text-align: right !important;
+  }
+
+  .ql-align-justify {
+    text-align: justify !important;
+  }
+`;
+
+const styleTag = document.createElement("style");
+styleTag.innerHTML = quillStyles;
+document.head.appendChild(styleTag);
+
+// 4. Get letterhead (if needed later)
+const letterheadImage = sessionStorage.getItem("letterHead");
+
+// 5. Create PDF doc
+const doc = new jsPDF({
+  orientation: "portrait",
+  unit: "px",
+  format: "a4",
+});
+
+// 6. Render to canvas
+const canvas = await html2canvas(container, {
+  scale: 2,
+  useCORS: true,
+  logging: false,
+  allowTaint: true,
+});
+
+// 7. Clean up DOM
+document.body.removeChild(container);
+
+// (Optional) Use canvas to add content to PDF...
+
 
     // Get dimensions
     const imgWidth = doc.internal.pageSize.getWidth()
