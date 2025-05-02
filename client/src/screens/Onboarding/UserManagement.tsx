@@ -329,7 +329,7 @@ import React from 'react'
 import { useState, useEffect } from "react"
 
 
-import { LayoutDashboard, Building2, Menu } from 'lucide-react';
+import { LayoutDashboard, Building2, Menu, BadgeDollarSign } from 'lucide-react';
 import {SheetHeader, SheetRow } from '../../components/SheetColumn'
 import SearchBar from '../../components/SearchBar'
 import axios from 'axios'
@@ -490,6 +490,13 @@ export default function UserManagementPage() {
             >
               <Building2 size={24} />
               {isSidebarOpen && <span className="ml-3">Manage Companies</span>}
+            </button>
+            <button
+              onClick={() => navigate(`/manage-credits`)}
+              className="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <BadgeDollarSign size={24} />
+              {isSidebarOpen && <span className="ml-3">Credits Management</span>}
             </button>
           </nav>
           <div className="p-4">

@@ -35,6 +35,7 @@ export default function LoginPage() {
     sessionStorage.setItem('role', user.role)
     sessionStorage.setItem('name', user.name)
     sessionStorage.setItem('company', user.company)
+    sessionStorage.setItem('companyId', user.companyId)
     const company = await axios.get(`${BASE_PATH}/companies?company=${user.companyId}`,
       {        headers: {
         Authorization: `Bearer ${user.token}`,

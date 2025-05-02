@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, Menu, BadgeDollarSign } from 'lucide-react';
 import axios from 'axios';
 
 import { ICompany } from "../../interface";
@@ -29,12 +29,14 @@ export default function CompanyManagement() {
     address: string;
     credit: number;
     letterHead: string | null; // Allow File object or null
+    whatsappToken: string | null;
   }>({
     name: "",
     legalName: "",
     address: "",
     credit: 0,
     letterHead: null, // Ensure it's initially null
+    whatsappToken: null,
   });
 
   useEffect(() => {
@@ -100,6 +102,7 @@ export default function CompanyManagement() {
       credit: company.credit,
       legalName: company.legalName,
       letterHead: company.letterHead,
+      whatsappToken: company.whatsappToken,
     });
     setIsModalOpen(true);
   };
@@ -114,6 +117,7 @@ export default function CompanyManagement() {
       credit: 0,
       legalName: "",
       letterHead: null,
+      whatsappToken: null,
     });
   };
 
@@ -163,6 +167,13 @@ export default function CompanyManagement() {
             >
               <Users size={24} />
               {isSidebarOpen && <span className="ml-3">Manage Users</span>}
+            </button>
+            <button
+              onClick={() => navigate(`/manage-credits`)}
+              className="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <BadgeDollarSign size={24} />
+              {isSidebarOpen && <span className="ml-3">Credits Management</span>}
             </button>
           </nav>
           <div className="p-4">
@@ -302,6 +313,7 @@ export default function CompanyManagement() {
                   CREDIT
                 </label>
                 <input
+                disabled={true}
                   type="number"
                   id="address"
                   value={formData.credit}
@@ -320,6 +332,19 @@ export default function CompanyManagement() {
                     id="legalName"
                     value={formData.legalName}
                     onChange={(e) => setFormData({ ...formData, legalName: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                <label htmlFor="whatsappToken" className="block text-sm font-medium text-gray-700">
+                    Whatsapp API Token
+                  </label>
+                  <input
+                    type="text"
+                    id="whatsappToken"
+                    value={formData.whatsappToken!!}
+                    onChange={(e) => setFormData({ ...formData, whatsappToken: e.target.value })}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
                   />

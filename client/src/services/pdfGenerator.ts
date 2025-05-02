@@ -76,9 +76,10 @@
 
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
+import { CSVRow } from "../screens/CSVUploadPage"
 
 // Function to convert HTML to PDF with proper Indic language support
-export const downloadPDF = async (htmlFormatedText: string) => {
+export const downloadPDF = async (htmlFormatedText: string, row:   CSVRow, templateName: string, pdfNameColumn: string) => {
   try {
     // Create a temporary container for the HTML content
     const container = document.createElement("div")
@@ -87,6 +88,7 @@ export const downloadPDF = async (htmlFormatedText: string) => {
     container.style.fontFamily = "'Noto Sans Devanagari', Arial, sans-serif"
     container.style.padding = "20px"
     document.body.appendChild(container)
+    container.style.fontSize = "12px";
 
     // Get letterhead from session storage if available
     const letterheadImage = sessionStorage.getItem("letterHead")
@@ -100,7 +102,7 @@ export const downloadPDF = async (htmlFormatedText: string) => {
 
     // First, render the HTML content to a canvas
     const canvas = await html2canvas(container, {
-      scale: 1, // Higher scale for better quality
+      scale: 2, // Higher scale for better quality
       useCORS: true,
       logging: false,
       allowTaint: true,
@@ -114,12 +116,11 @@ export const downloadPDF = async (htmlFormatedText: string) => {
     const imgHeight = (canvas.height * imgWidth) / canvas.width
 
     
-    console.log("letterhead:", letterheadImage)
 
     // Add letterhead if available
     let yOffset = 0
     if (letterheadImage) {
-      const headerHeight = 150
+      const headerHeight = 70
       doc.addImage(letterheadImage, "PNG", 0, 0, imgWidth, headerHeight)
       yOffset = headerHeight
     }
@@ -128,8 +129,11 @@ export const downloadPDF = async (htmlFormatedText: string) => {
     const contentDataUrl = canvas.toDataURL("image/png")
     doc.addImage(contentDataUrl, "PNG", 0, yOffset, imgWidth, imgHeight)
 
+    console.log(row)
+    var username = row[pdfNameColumn]
     // Save the PDF
-    doc.save("document.pdf")
+    console.log("Saving PDF with name:", `${username}-${templateName}.pdf`)
+    doc.save(`${username}-${templateName}.pdf`)
   } catch (error) {
     console.error("Error generating PDF:", error)
   }

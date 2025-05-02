@@ -3,12 +3,14 @@ import Card from '../../components/Card';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-import { Building2, LayoutDashboard, Menu, User } from 'lucide-react';
+import { BadgeDollarSign, Building2, LayoutDashboard, Menu, User } from 'lucide-react';
+import { Roles } from '../../interface';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const role = sessionStorage.getItem('role');
+  console.log(role)
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -58,6 +60,15 @@ export default function AdminDashboard() {
               <Building2 size={24} />
               {isSidebarOpen && <span className="ml-3">Company Management</span>}
             </button>
+            {role == Roles.SUPERADMIN && (
+              <button
+              onClick={() => navigate(`/manage-credits`)}
+              className="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <BadgeDollarSign  size={24} />
+              {isSidebarOpen && <span className="ml-3">Credit Management</span>}
+            </button>
+            )}
           </nav>
           <div className="p-4">
             <button
@@ -85,6 +96,10 @@ export default function AdminDashboard() {
         <Card 
           title={"Company"}
           onClick={() => navigate("/manage-companies")}
+        />
+        <Card 
+          title={"Credits"}
+          onClick={() => navigate("/manage-credits")}
         />
         </div>
       </div>

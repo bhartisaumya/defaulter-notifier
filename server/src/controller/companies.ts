@@ -68,9 +68,9 @@ const deleteCompany = async(req: Request, res: Response, next: NextFunction) => 
 const updateCompany = async(req: Request, res: Response, next: NextFunction) => {
   try {
     const _id = req.query.id as string
-    const {name, address, credit, legalName, letterHead} = req.body
+    const {name, address, credit, legalName, letterHead, whatsappToken} = req.body
 
-    const unalteredCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit, legalName, letterHead})
+    const unalteredCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit, legalName, letterHead, whatsappToken})
 
     if(!unalteredCompany)
       throw createError.NotFound("Company not found");

@@ -17,15 +17,18 @@ export interface ICompanyUsers{
 
 export enum Roles {
     ADMIN = "admin",
-    USER = "user"
+    USER = "user",
+    SUPERADMIN = "super-admin"
 }
 
 export interface ICompany{
+    _id? : string;
     name: string,
     address: string,
     credit: number
     legalName: string,
     letterHead: string,
+    whatsappToken: string,
 }
 
 export interface ITemplate{
@@ -38,8 +41,19 @@ export interface ITemplate{
 
 export interface IColumn {
     _id: string,
-    defaulter_phone: string;
-    guarantor_phone1: string;
-    guarantor_phone2: string;
+    borrower: string;
+    co_borrower: string;
+    guarantor_1: string;
+    guarantor_2: string;
+    guarantor_3: string;
+
   }
+
+export interface ICreditTransaction {
+    _id: string,
+    company: string,
+    amount: number,
+    justification: string,
+    createdAt: Date,
+}
   

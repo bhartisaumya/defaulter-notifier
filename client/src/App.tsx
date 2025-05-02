@@ -80,6 +80,7 @@ import TemplateManagement from "./screens/Templates/TemplateManagement";
 import ColumnManagement from "./screens/Templates/ColumnMapping";
 
 import CSVUploadPage from "./screens/CSVUploadPage"
+import CreditManagementPage from "./screens/Onboarding/CreditManagement";
 
 const router = createBrowserRouter([
   {
@@ -109,6 +110,10 @@ const router = createBrowserRouter([
   {
     path: "/manage-companies",
     element: <CompanyManagement />
+  },
+  {
+    path: "/manage-credits",
+    element: <CreditManagementPage />
   },
   {
     path: "/manage-templates",

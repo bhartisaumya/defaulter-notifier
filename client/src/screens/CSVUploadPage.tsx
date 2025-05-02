@@ -456,7 +456,7 @@ import type { ITemplate } from "../interface"
 import { downloadPDF } from "../services/pdfGenerator"
 import { BASE_PATH } from "../constants/constants"
 
-interface CSVRow {
+export interface CSVRow {
   [key: string]: string
 }
 
@@ -473,11 +473,35 @@ export default function CSVTemplatePage() {
   const [creditPoints, setCreditPoints] = useState(0) // New state for credit points
   const fileInputRef = useRef<HTMLInputElement>(null)
   const role = sessionStorage.getItem("role")
+  const [defaultColumns, setDefaultColumns] = useState<string[]>([])
+  const [pdfNameColumn, setpdfNameColumn] = useState<string>("");
 
   useEffect(() => {
     fetchData()
     fetchCreditPoints()
+    fetchDefaultColumns()
   }, [])
+
+  const fetchDefaultColumns = async () => {
+    const token = sessionStorage.getItem("token")
+    const companyId = sessionStorage.getItem("companyId")
+
+    const response = await axios.get(`${BASE_PATH}/template-columns?company=${companyId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    console.log(response.data)
+      // Extract values from the response object
+      const filteredValues = Object.keys(response.data)
+      .filter((key : any) => key !== "_v" && key !== "company" && key !== "_id" && typeof(key))
+      .map(key => response.data[key]);
+
+    setpdfNameColumn(response.data.pdfNameColumn)
+  
+    setDefaultColumns(filteredValues as string[]); 
+
+  }
 
   useEffect(() => {
     if (error) {
@@ -492,6 +516,7 @@ export default function CSVTemplatePage() {
     try {
       const token = sessionStorage.getItem("token")
       const company = sessionStorage.getItem("company")
+
       const response = await axios.get(`${BASE_PATH}/templates/?company=${company}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -506,9 +531,10 @@ export default function CSVTemplatePage() {
   const fetchCreditPoints = async () => {
     try {
       const token = sessionStorage.getItem("token")
-      const company = sessionStorage.getItem("company")
+      // const company = sessionStorage.getItem("company")
+      const companyID = sessionStorage.getItem("companyId")
 
-      const response = await axios.get(`${BASE_PATH}/companies/?company=${company}`, {
+      const response = await axios.get(`${BASE_PATH}/companies/?company=${companyID}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -555,8 +581,9 @@ export default function CSVTemplatePage() {
             }
           }
           setCSVData(data)
+          console.log(Object.keys(data[0]))
           if (data.length > 0) {
-            setHeaders(Object.keys(data[0]))
+            setHeaders(Object.keys(data[0]).filter((header) => header != "0" ))
           }
         },
         error: (error) => {
@@ -584,7 +611,7 @@ export default function CSVTemplatePage() {
 
   const replaceTemplateVariables = (template: string, data: CSVRow) => {
     const hasError = false
-    const result = template.replace(/\{(\w+)\}/g, (match, key) => {
+    const result = template.replace(/\{([\w\u0900-\u097F]+)\}/g, (match, key) => {
       if (!data[key]) {
         // hasError = true
         // console.log(`Field "${key}" not present in CSV data`)
@@ -615,10 +642,10 @@ export default function CSVTemplatePage() {
       setError("Please select both a template and a row")
       return
     }
-
+    console.log(selectedRow)
     const htmlFormatedText = replaceTemplateVariables(selectedTemplate.body, selectedRow)
 
-    downloadPDF(htmlFormatedText)
+    downloadPDF(htmlFormatedText, selectedRow, selectedTemplate.title,pdfNameColumn)
   }
 
   // const handleSend = async () => {
@@ -677,10 +704,13 @@ export default function CSVTemplatePage() {
 
     const pattern = /\{([^}]+)\}/g
     const matches = [...new Set([...selectedTemplate.body.matchAll(pattern)].map((m) => m[1]))]
+    console.log(defaultColumns,"hello")
+    const filteredMatches = matches.filter((match) => !defaultColumns.includes(match))
+    const csvHeaders = [...filteredMatches, ...defaultColumns.sort()].filter((item: any) => item!=0 || item!='pdfNameColumn').join(",") + "\n"
+    
 
-    const csvHeaders = matches.join(",") + "\n"
-
-    const blob = new Blob([csvHeaders], { type: "text/csv" })
+    const BOM = "\uFEFF"; // UTF-8 Byte Order Mark
+    const blob = new Blob([BOM + csvHeaders], { type: "text/csv;charset=utf-8" });
 
     // Create a download link
     const url = URL.createObjectURL(blob)
@@ -830,9 +860,6 @@ export default function CSVTemplatePage() {
                             Select
                           </div>
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Index
-                        </th>
                         {headers.map((header) => (
                           <th
                             key={header}
@@ -863,7 +890,7 @@ export default function CSVTemplatePage() {
                               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             />
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{index}</td>
+
                           {headers.map((header) => (
                             <td key={header} className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
                               {row[header]}

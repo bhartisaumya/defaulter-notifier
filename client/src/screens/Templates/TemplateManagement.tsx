@@ -244,8 +244,8 @@ export default function TemplateManagement() {
 
       {/* Modal for adding/editing templates */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 relative z-10">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-900">{editingTemplates ? "Edit Template" : "Add New Template"}</h2>
               <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-500">
@@ -273,20 +273,46 @@ export default function TemplateManagement() {
                 <label htmlFor="body" className="block text-sm font-medium text-gray-700">
                   Body
                 </label>
+                <div className="h-[300px] overflow-y-auto">
                 <ReactQuill
                   id="body"
+
                   modules={{
+                    toolbar: [
+                      [{ 'header': [] }, { 'font': [] }],
+                      [{ size: [] }],
+                      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                      [
+                        { 'list': 'ordered' },
+                        { 'list': 'bullet' },
+                        { 'indent': '-1' },
+                        { 'indent': '+1' },
+                      ],
+                      ['link', 'image', 'video'],
+                      ['clean'],
+                      [{ 'color': [] }, { 'background': [] }],
+                      [{ align: '' }, { align: 'center' }, { align: 'right' }, { align: 'justify' }],
+                      // [],
+                    ],
                     clipboard: {
                       matchVisual: false
                     }
                   }}
+                  formats={[
+                    'header', 'font', 'size', 'color',
+                    'bold', 'italic', 'underline', 'strike', 'blockquote',
+                    'list', 'bullet', 'indent',
+                    'link', 'image', 'video',
+                    'align',
+                  ]}
                   value={formData.body}
                   theme="snow"
-                  style={{ height: "300px" }}
+                  style={{ height: "300px", width: "100%" }}
                   onChange={(value) => setFormData({ ...formData, body: value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   
                 />
+              </div>
                 
               </div>
 

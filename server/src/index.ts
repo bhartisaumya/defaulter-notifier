@@ -15,7 +15,7 @@ import companyUsers from "./routes/companyUsers"
 import companies from "./routes/companies"
 import companyTemplate from "./routes/companyTemplate"
 import templateColumns from "./routes/templateColumns"
-
+import tokenTransactions from "./routes/tokenTransactions"
 import authHandler, {restrictTo} from "./middlewares/authentication"
 import {login} from "./controller/authentication"
 import { Roles } from "./interface";
@@ -44,6 +44,7 @@ app.use('/company-users', companyUsers)
 app.use('/companies', companies)
 app.use('/templates', companyTemplate)
 app.use('/template-columns', templateColumns)
+app.use('/credit-transactions', tokenTransactions)
 
 
 

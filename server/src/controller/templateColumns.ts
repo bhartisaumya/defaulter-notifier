@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import TemplateModel from "../models/messageTemplate";
 import createError from 'http-errors'
 import ColumnModel from "../models/csvColumn";
+import { ObjectId } from "bson";
 
 
 const getTemplateColumns = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
@@ -22,49 +23,58 @@ const getTemplateColumns = async (req: Request, res: Response, next: NextFunctio
 
 
 
-const updateTemplateColumns = async(req: Request, res: Response, next: NextFunction) => {
+const createOrUpdateTemplateColumns = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const _id = req.query._id
-    console.log(_id)
-    const {defaulter_name,
-        defaulter_age,
-        defaulter_phone,
-        guarantor_name1,
-        guarantor_phone1,
-        guarantor_name2,
-        guarantor_phone2,
-        due_date1,
-        due_date2
-     } = req.body;
+    const company = req.query.company;
 
+    const {
+      borrower,
+      co_borrower,
+      guarantor_1,
+      guarantor_2,
+      guarantor_3,
+      pdfNameColumn
+    } = req.body;
 
-    console.log(defaulter_age)
+    if (!company) {
+      throw createError.BadRequest("Company is required");
+    }
 
-     
-    const column = await ColumnModel.findByIdAndUpdate
-    (_id, {
-        defaulter_name,
-        defaulter_age,
-        defaulter_phone,
-        guarantor_name1,
-        guarantor_phone1,
-        guarantor_name2,
-        guarantor_phone2,
-        due_date1,
-        due_date2
-     });
+    let column = await ColumnModel.findOne({ company });
 
-    if(!column)
-      throw createError.NotFound("Column not found");
+    if (column) {
+      // Update existing document
+      column.borrower = borrower;
+      column.co_borrower = co_borrower;
+      column.guarantor_1 = guarantor_1;
+      column.guarantor_2 = guarantor_2;
+      column.guarantor_3 = guarantor_3;
+      column.pdfNameColumn = pdfNameColumn;
 
-    res.status(200).json({message: "Column updated successfully"});
+      await column.save();
+      res.status(200).json({ message: "Column updated successfully" });
+    } else {
+      // Create new document
+      column = new ColumnModel({
+        company,
+        borrower,
+        co_borrower,
+        guarantor_1,
+        guarantor_2,
+        guarantor_3,
+        pdfNameColumn
+      });
+
+      await column.save();
+      res.status(201).json({ message: "Column created successfully" });
+    }
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 
 export{
     getTemplateColumns,
-    updateTemplateColumns
+    createOrUpdateTemplateColumns
 }

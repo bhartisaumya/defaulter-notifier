@@ -7,8 +7,9 @@ import TokenTransactionModel from "../models/tokenTransaction";
 const addTransaction = async (req: Request, res: Response, next: NextFunction) => {
     
     try {
-        const {companyId, amountToAdd, justification} = req.body
-        if(!companyId || !amountToAdd || !justification){
+        const {companyId, amount, justification} = req.body
+        console.log(req.body)
+        if(!companyId || !amount || !justification){
             res.status(400).json({message : "Bad request"})
             return
         }
@@ -19,9 +20,10 @@ const addTransaction = async (req: Request, res: Response, next: NextFunction) =
             res.status(400).json({message : "Company not found"})
             return
         }
-        gotCompany.updateOne({_id: companyId},{credit: gotCompany.credit + amountToAdd})
+        gotCompany.credit += amount;
+        await gotCompany.save();
 
-        const newTransaction = new TokenTransactionModel({companyId, tokenAmount: amountToAdd, justification: justification});
+        const newTransaction = new TokenTransactionModel({companyId, amount: amount, justification: justification});
         await newTransaction.save();
         res.status(201).json({"message": "Transaction added successfuly"})
 
@@ -32,21 +34,21 @@ const addTransaction = async (req: Request, res: Response, next: NextFunction) =
 }
 const getCompanyTransactions = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { companyId } = req.body;
-
+        const  companyId  = req.query.company;
+        console.log(companyId)
         if (!companyId) {
             res.status(400).json({ message: "Bad request: companyId is required" });
             return;
         }
 
-        const gotCompany = await CompanyModel.findOne({ _id: new ObjectId(companyId) });
+        const gotCompany = await CompanyModel.findOne({ _id: new ObjectId(companyId as string) });
 
         if (!gotCompany) {
             res.status(404).json({ message: "Company not found" });
             return;
         }
 
-        const transactions = await TokenTransactionModel.find({ companyId: new ObjectId(companyId) }).sort({ createdAt: -1 });
+        const transactions = await TokenTransactionModel.find({ companyId: companyId }).sort({ createdAt: -1 });
 
         res.status(200).json({ transactions });
 

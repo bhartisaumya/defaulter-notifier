@@ -11,9 +11,12 @@ import { useNavigate } from "react-router-dom"
 import { BASE_PATH } from "../../constants/constants"
 
 const allowedFields: Record<string, string> = {
-  defaulter_phone: "Defaulter Phone No.",
-  guarantor_phone1: "Guarantor Phone - 1",
-  guarantor_phone2: "Guarantor Phone - 2",
+  borrower: "Borrower ",
+  co_borrower: "Co Borrower",
+  guarantor_1: "Guarantor 1",
+  guarantor_2: "Guarantor 2",
+  guarantor_3: "Guarantor 3",
+  pdfNameColumn: "PDF Name Column",
 }
 
 export default function FormEditor() {
@@ -29,9 +32,11 @@ export default function FormEditor() {
 
   const [formData, setFormData] = useState<IColumn>({
     _id: "",
-    defaulter_phone: "",
-    guarantor_phone1: "",
-    guarantor_phone2: "",
+    borrower: "",
+    co_borrower: "",
+    guarantor_1: "",
+    guarantor_2: "",
+    guarantor_3: "",
   })
 
   const handleChange = (field: string, value: string) => {
@@ -47,11 +52,11 @@ export default function FormEditor() {
       setLoading(true)
       setError(null)
 
-      const company = sessionStorage.getItem("company")
+      // const company = sessionStorage.getItem("company")
       const token = sessionStorage.getItem("token")
+      const companyId = sessionStorage.getItem("companyId")
 
-      const response = await axios.get(`http://{${BASE_PATH}/template-columns`, {
-        params: { company },
+      const response = await axios.get(`${BASE_PATH}/template-columns?company=${companyId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -61,7 +66,7 @@ export default function FormEditor() {
 
       setFormData(response.data)
     } catch (err) {
-      setError("Failed to load form data")
+      // setError("Failed to load form data")
       console.error("Error fetching form data:", err)
     } finally {
       setLoading(false)
@@ -76,11 +81,12 @@ export default function FormEditor() {
       setSuccessMessage(null)
 
       const token = sessionStorage.getItem("token")
+      const companyId = sessionStorage.getItem("companyId")
 
       console.log(formData)
 
-      await axios.patch(`http://${BASE_PATH}/template-columns`, formData, {
-        params: { _id: formData._id },
+      await axios.patch(`${BASE_PATH}/template-columns`, formData, {
+        params: { company: companyId },
         headers: {
           Authorization: `Bearer ${token}`,
         },

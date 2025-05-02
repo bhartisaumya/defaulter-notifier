@@ -3,9 +3,13 @@ import {Schema, model} from "mongoose"
 
 const ColumnSchema = new Schema({
     company: {type: String, required: true},
-    defaulter_phone: {type: String},
-    guarantor_phone1: {type: String},
-    guarantor_phone2: {type: String}
+    borrower: {type: String},
+    co_borrower: {type: String},
+    guarantor_1: {type: String},
+    guarantor_2: {type: String},
+    guarantor_3: {type: String},
+    pdfNameColumn: {type: String}
+
 })
 
 
