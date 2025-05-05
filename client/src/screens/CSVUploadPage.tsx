@@ -8,15 +8,15 @@
 // import { LayoutDashboard, FileText, Menu } from "lucide-react"
 // import type { ITemplate } from "../interface"
 // import { downloadPDF } from "../services/pdfGenerator"
-// import { BASE_PATH} from "../constants/constants"
+// import { BASE_PATH } from "../constants/constants"
 
-// interface CSVRow {
+// export interface CSVRow {
 //   [key: string]: string
 // }
 
 // export default function CSVTemplatePage() {
-//   const [selectedRowIndex] = useState<number | null>(null);
-//   const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([]);
+//   const [selectedRowIndex] = useState<number | null>(null)
+//   const [selectedRowIndices, setSelectedRowIndices] = useState<number[]>([])
 
 //   const [templates, setTemplates] = useState<ITemplate[]>([])
 //   const [csvData, setCSVData] = useState<CSVRow[]>([])
@@ -27,25 +27,50 @@
 //   const [creditPoints, setCreditPoints] = useState(0) // New state for credit points
 //   const fileInputRef = useRef<HTMLInputElement>(null)
 //   const role = sessionStorage.getItem("role")
+//   const [defaultColumns, setDefaultColumns] = useState<string[]>([])
+//   const [pdfNameColumn, setpdfNameColumn] = useState<string>("");
 
 //   useEffect(() => {
 //     fetchData()
 //     fetchCreditPoints()
+//     fetchDefaultColumns()
 //   }, [])
+
+//   const fetchDefaultColumns = async () => {
+//     const token = sessionStorage.getItem("token")
+//     const companyId = sessionStorage.getItem("companyId")
+
+//     const response = await axios.get(`${BASE_PATH}/template-columns?company=${companyId}`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     })
+//     console.log(response.data)
+//       // Extract values from the response object
+//       const filteredValues = Object.keys(response.data)
+//       .filter((key : any) => key !== "_v" && key !== "company" && key !== "_id" && typeof(key))
+//       .map(key => response.data[key]);
+
+//     setpdfNameColumn(response.data.pdfNameColumn)
+  
+//     setDefaultColumns(filteredValues as string[]); 
+
+//   }
 
 //   useEffect(() => {
 //     if (error) {
 //       const timer = setTimeout(() => {
-//         setError(""); // Clear error after 3 seconds
-//       }, 3000);
+//         setError("") // Clear error after 3 seconds
+//       }, 3000)
 
-//       return () => clearTimeout(timer); // Cleanup on unmount
+//       return () => clearTimeout(timer) // Cleanup on unmount
 //     }
-//   }, [error]);
+//   }, [error])
 //   const fetchData = async () => {
 //     try {
 //       const token = sessionStorage.getItem("token")
 //       const company = sessionStorage.getItem("company")
+
 //       const response = await axios.get(`${BASE_PATH}/templates/?company=${company}`, {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
@@ -60,9 +85,10 @@
 //   const fetchCreditPoints = async () => {
 //     try {
 //       const token = sessionStorage.getItem("token")
-//       const company = sessionStorage.getItem("company")
+//       // const company = sessionStorage.getItem("company")
+//       const companyID = sessionStorage.getItem("companyId")
 
-//       const response = await axios.get(`${BASE_PATH}/companies/?company=${company}`, {
+//       const response = await axios.get(`${BASE_PATH}/companies/?company=${companyID}`, {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
 //         },
@@ -86,12 +112,11 @@
 //     const file = event.target.files?.[0]
 //     console.log(file)
 
-//     if (!selectedTemplate){
+//     if (!selectedTemplate) {
 //       console.error("No template selected")
 //       setError("Please select a template first")
 //       return
-//     }
-//     else if (file) {
+//     } else if (file) {
 //       Papa.parse(file, {
 //         header: true,
 //         complete: (results) => {
@@ -110,10 +135,10 @@
 //             }
 //           }
 //           setCSVData(data)
+//           console.log(Object.keys(data[0]))
 //           if (data.length > 0) {
-//             setHeaders(Object.keys(data[0]))
+//             setHeaders(Object.keys(data[0]).filter((header) => header != "0" ))
 //           }
-
 //         },
 //         error: (error) => {
 //           console.error("Error parsing CSV:", error)
@@ -124,16 +149,23 @@
 //   }
 
 //   const handleRowSelection = (index: number) => {
-//     setSelectedRowIndices((prev) =>
-//       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-//     );
+//     setSelectedRowIndices((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]))
 //     console.log(selectedRowIndices)
-//   };
-  
+//   }
+
+//   const handleSelectAll = () => {
+//     if (selectedRowIndices.length === csvData.length) {
+//       // If all rows are already selected, deselect all
+//       setSelectedRowIndices([])
+//     } else {
+//       // Otherwise, select all rows
+//       setSelectedRowIndices(csvData.map((_, index) => index))
+//     }
+//   }
 
 //   const replaceTemplateVariables = (template: string, data: CSVRow) => {
-//     let hasError = false
-//     const result = template.replace(/\{(\w+)\}/g, (match, key) => {
+//     const hasError = false
+//     const result = template.replace(/\{([\w\u0900-\u097F]+)\}/g, (match, key) => {
 //       if (!data[key]) {
 //         // hasError = true
 //         // console.log(`Field "${key}" not present in CSV data`)
@@ -161,15 +193,14 @@
 
 //   const downloadTemplate = (selectedRow: CSVRow) => {
 //     if (!selectedTemplate || !selectedRow) {
-//       setError("Please select both a template and a row");
-//       return;
+//       setError("Please select both a template and a row")
+//       return
 //     }
-
+//     console.log(selectedRow)
 //     const htmlFormatedText = replaceTemplateVariables(selectedTemplate.body, selectedRow)
 
-//     downloadPDF(htmlFormatedText)
-//   };
-  
+//     downloadPDF(htmlFormatedText, selectedRow, selectedTemplate.title,pdfNameColumn, setError)
+//   }
 
 //   // const handleSend = async () => {
 //   //   if (!selectedTemplate || !selectedRowIndex) {
@@ -202,23 +233,22 @@
 
 //   const downloadMultiplePDFs = async () => {
 //     if (!selectedTemplate || selectedRowIndices.length === 0) {
-//       setError("Please select a template and at least one row");
-//       return;
+//       setError("Please select a template and at least one row")
+//       return
 //     }
-  
+
 //     try {
 //       // Create and download PDFs for each selected row
 //       selectedRowIndices.forEach((index) => {
 //         downloadTemplate(csvData[index])
 //         console.log(index)
-//       });
-  
-//       alert(`Downloading ${selectedRowIndices.length} PDFs...`);
+//       })
+
+//       alert(`Downloading ${selectedRowIndices.length} PDFs...`)
 //     } catch (err) {
-//       setError("Failed to download PDFs");
+//       setError("Failed to download PDFs")
 //     }
-//   };
-  
+//   }
 
 //   const downloadEmptyCSV = () => {
 //     if (!selectedTemplate) {
@@ -228,10 +258,13 @@
 
 //     const pattern = /\{([^}]+)\}/g
 //     const matches = [...new Set([...selectedTemplate.body.matchAll(pattern)].map((m) => m[1]))]
+//     console.log(defaultColumns,"hello")
+//     const filteredMatches = matches.filter((match) => !defaultColumns.includes(match))
+//     const csvHeaders = [...filteredMatches, ...defaultColumns.sort()].filter((item: any) => item!=0 || item!='pdfNameColumn').join(",") + "\n"
+    
 
-//     const csvHeaders = matches.join(",") + "\n"
-
-//     const blob = new Blob([csvHeaders], { type: "text/csv" })
+//     const BOM = "\uFEFF"; // UTF-8 Byte Order Mark
+//     const blob = new Blob([BOM + csvHeaders], { type: "text/csv;charset=utf-8" });
 
 //     // Create a download link
 //     const url = URL.createObjectURL(blob)
@@ -324,16 +357,16 @@
 //                 <div>
 //                   <label className="block text-sm font-medium text-gray-700">Upload CSV File</label>
 //                   <div className="mt-1 flex items-center space-x-4">
-//                   <div className="relative inline-block">
-//                     <input
-//                       type="file"
-//                       ref={fileInputRef}
-//                       accept=".csv"
-//                       onChange={handleFileUpload}
-//                       className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-//                       style={{ color: 'transparent' }} // Hide filename
-//                     />
-//                   </div>
+//                     <div className="relative inline-block">
+//                       <input
+//                         type="file"
+//                         ref={fileInputRef}
+//                         accept=".csv"
+//                         onChange={handleFileUpload}
+//                         className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+//                         style={{ color: "transparent" }} // Hide filename
+//                       />
+//                     </div>
 //                   </div>
 //                 </div>
 //                 {/* Template Selection */}
@@ -371,10 +404,15 @@
 //                     <thead className="bg-gray-50">
 //                       <tr>
 //                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                           Select
-//                         </th>
-//                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                           Index
+//                           <div className="flex items-center">
+//                             <input
+//                               type="checkbox"
+//                               checked={selectedRowIndices.length === csvData.length && csvData.length > 0}
+//                               onChange={handleSelectAll}
+//                               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
+//                             />
+//                             Select
+//                           </div>
 //                         </th>
 //                         {headers.map((header) => (
 //                           <th
@@ -389,25 +427,24 @@
 //                     <tbody className="bg-white divide-y divide-gray-200">
 //                       {csvData.map((row, index) => (
 //                         <tr
-//                         key={index}
-//                         className={`hover:bg-gray-50 ${
-//                           selectedRowIndex === index
-//                             ? "bg-blue-50"
-//                             : selectedRowIndices.includes(index)
-//                               ? "bg-blue-100"
-//                               : ""
-//                         }`}
+//                           key={index}
+//                           className={`hover:bg-gray-50 ${
+//                             selectedRowIndex === index
+//                               ? "bg-blue-50"
+//                               : selectedRowIndices.includes(index)
+//                                 ? "bg-blue-100"
+//                                 : ""
+//                           }`}
 //                         >
 //                           <td className="px-4 py-4 whitespace-nowrap">
-//                           <input
-//                             type="checkbox"
-//                             checked={selectedRowIndices.includes(index)}
-//                             onChange={() => handleRowSelection(index)}
-//                             className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-//                           />
-
+//                             <input
+//                               type="checkbox"
+//                               checked={selectedRowIndices.includes(index)}
+//                               onChange={() => handleRowSelection(index)}
+//                               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+//                             />
 //                           </td>
-//                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{index}</td>
+
 //                           {headers.map((header) => (
 //                             <td key={header} className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
 //                               {row[header]}
@@ -422,7 +459,9 @@
 //             )}
 //             {csvData.length > 0 && selectedRowIndices.length > 0 && (
 //               <div className="bg-white p-4 rounded-lg shadow-sm mt-4 flex justify-end space-x-4">
-//                 <span className="mr-auto text-sm text-gray-600 self-center">{selectedRowIndices.length} rows selected</span>
+//                 <span className="mr-auto text-sm text-gray-600 self-center">
+//                   {selectedRowIndices.length} rows selected
+//                 </span>
 //                 <button
 //                   onClick={downloadMultiplePDFs}
 //                   className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -443,6 +482,7 @@
 //     </div>
 //   )
 // }
+
 
 "use client"
 // @ts-nocheck
@@ -474,7 +514,10 @@ export default function CSVTemplatePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const role = sessionStorage.getItem("role")
   const [defaultColumns, setDefaultColumns] = useState<string[]>([])
-  const [pdfNameColumn, setpdfNameColumn] = useState<string>("");
+  const [pdfNameColumn, setpdfNameColumn] = useState<string>("")
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [rowsPerPage, setRowsPerPage] = useState<number>(10)
+  const [totalPages, setTotalPages] = useState<number>(1)
 
   useEffect(() => {
     fetchData()
@@ -492,15 +535,14 @@ export default function CSVTemplatePage() {
       },
     })
     console.log(response.data)
-      // Extract values from the response object
-      const filteredValues = Object.keys(response.data)
-      .filter((key : any) => key !== "_v" && key !== "company" && key !== "_id" && typeof(key))
-      .map(key => response.data[key]);
+    // Extract values from the response object
+    const filteredValues = Object.keys(response.data)
+      .filter((key: any) => key !== "_v" && key !== "company" && key !== "_id" && typeof key)
+      .map((key) => response.data[key])
 
     setpdfNameColumn(response.data.pdfNameColumn)
-  
-    setDefaultColumns(filteredValues as string[]); 
 
+    setDefaultColumns(filteredValues as string[])
   }
 
   useEffect(() => {
@@ -581,9 +623,11 @@ export default function CSVTemplatePage() {
             }
           }
           setCSVData(data)
+          setTotalPages(Math.ceil(data.length / rowsPerPage))
+          setCurrentPage(1) // Reset to first page when new data is loaded
           console.log(Object.keys(data[0]))
           if (data.length > 0) {
-            setHeaders(Object.keys(data[0]).filter((header) => header != "0" ))
+            setHeaders(Object.keys(data[0]).filter((header) => header != "0"))
           }
         },
         error: (error) => {
@@ -607,6 +651,17 @@ export default function CSVTemplatePage() {
       // Otherwise, select all rows
       setSelectedRowIndices(csvData.map((_, index) => index))
     }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newRowsPerPage = Number.parseInt(e.target.value)
+    setRowsPerPage(newRowsPerPage)
+    setTotalPages(Math.ceil(csvData.length / newRowsPerPage))
+    setCurrentPage(1) // Reset to first page when changing rows per page
   }
 
   const replaceTemplateVariables = (template: string, data: CSVRow) => {
@@ -645,7 +700,7 @@ export default function CSVTemplatePage() {
     console.log(selectedRow)
     const htmlFormatedText = replaceTemplateVariables(selectedTemplate.body, selectedRow)
 
-    downloadPDF(htmlFormatedText, selectedRow, selectedTemplate.title,pdfNameColumn, setError)
+    downloadPDF(htmlFormatedText, selectedRow, selectedTemplate.title, pdfNameColumn, setError)
   }
 
   // const handleSend = async () => {
@@ -704,13 +759,15 @@ export default function CSVTemplatePage() {
 
     const pattern = /\{([^}]+)\}/g
     const matches = [...new Set([...selectedTemplate.body.matchAll(pattern)].map((m) => m[1]))]
-    console.log(defaultColumns,"hello")
+    console.log(defaultColumns, "hello")
     const filteredMatches = matches.filter((match) => !defaultColumns.includes(match))
-    const csvHeaders = [...filteredMatches, ...defaultColumns.sort()].filter((item: any) => item!=0 || item!='pdfNameColumn').join(",") + "\n"
-    
+    const csvHeaders =
+      [...filteredMatches, ...defaultColumns.sort()]
+        .filter((item: any) => item != 0 || item != "pdfNameColumn")
+        .join(",") + "\n"
 
-    const BOM = "\uFEFF"; // UTF-8 Byte Order Mark
-    const blob = new Blob([BOM + csvHeaders], { type: "text/csv;charset=utf-8" });
+    const BOM = "\uFEFF" // UTF-8 Byte Order Mark
+    const blob = new Blob([BOM + csvHeaders], { type: "text/csv;charset=utf-8" })
 
     // Create a download link
     const url = URL.createObjectURL(blob)
@@ -871,35 +928,125 @@ export default function CSVTemplatePage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {csvData.map((row, index) => (
-                        <tr
-                          key={index}
-                          className={`hover:bg-gray-50 ${
-                            selectedRowIndex === index
-                              ? "bg-blue-50"
-                              : selectedRowIndices.includes(index)
-                                ? "bg-blue-100"
-                                : ""
-                          }`}
-                        >
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              checked={selectedRowIndices.includes(index)}
-                              onChange={() => handleRowSelection(index)}
-                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                          </td>
+                      {csvData
+                        .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+                        .map((row, slicedIndex) => {
+                          const index = (currentPage - 1) * rowsPerPage + slicedIndex
+                          return (
+                            <tr
+                              key={index}
+                              className={`hover:bg-gray-50 ${
+                                selectedRowIndex === index
+                                  ? "bg-blue-50"
+                                  : selectedRowIndices.includes(index)
+                                    ? "bg-blue-100"
+                                    : ""
+                              }`}
+                            >
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedRowIndices.includes(index)}
+                                  onChange={() => handleRowSelection(index)}
+                                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                              </td>
 
-                          {headers.map((header) => (
-                            <td key={header} className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {row[header]}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
+                              {headers.map((header) => (
+                                <td key={header} className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {row[header]}
+                                </td>
+                              ))}
+                            </tr>
+                          )
+                        })}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 sm:px-6 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="mr-2 text-sm text-gray-700">Rows per page:</span>
+                    <select
+                      value={rowsPerPage}
+                      onChange={handleRowsPerPageChange}
+                      className="rounded border-gray-300 text-sm"
+                    >
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-700">
+                      Page {currentPage} of {totalPages} ({csvData.length} total rows)
+                    </span>
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      <button
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">First</span>
+                        <span>«</span>
+                      </button>
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Previous</span>
+                        <span>‹</span>
+                      </button>
+
+                      {/* Page numbers */}
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              currentPage === pageNum
+                                ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                                : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        )
+                      })}
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Next</span>
+                        <span>›</span>
+                      </button>
+                      <button
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Last</span>
+                        <span>»</span>
+                      </button>
+                    </nav>
+                  </div>
                 </div>
               </div>
             )}
