@@ -47,9 +47,9 @@ app.use('/template-columns', templateColumns)
 app.use('/credit-transactions', tokenTransactions)
 
 
-
 // Error Handling
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.log(`[${req.method}] ${req.originalUrl}`);
     res.status(err.status || 500)
     res.json({
         error: {
@@ -62,5 +62,5 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 const PORT = Data.PORT || 8000;
 app.listen(PORT, () => {
-    console.log(`Server running on port: ${PORT}`)
+    console.log(`Server running on ports: ${PORT}`)
 })

@@ -29,6 +29,7 @@ export interface ICompany{
     legalName: string,
     letterHead: string,
     whatsappToken: string,
+    waba: string
 }
 
 export interface ITemplate{
@@ -36,9 +37,16 @@ export interface ITemplate{
     title: string,
     body: string,
     company: string
+    metaTemplateId: string
 }
 
+export interface IMetaTemplate{
+    id: string,
+    name: string,
+    status: string,
+    category: string
 
+}
 export interface IColumn {
     _id: string,
     borrower: string;

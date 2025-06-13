@@ -21,18 +21,40 @@ export default function TemplateManagement() {
   const [editingTemplates, setEditingTemplates] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [metaTemplates, setMetaTemplates] = useState<any[]>([])
   const role = sessionStorage.getItem('role')
 
   // Form state
   const [formData, setFormData] = useState({
     title: "",
     body: "",
+    metaTemplate:""
   });
 
   useEffect(() => {
     fetchData();
+    fetchMetaTemplates();
   }, []);
 
+  const fetchMetaTemplates = async()=>{
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem('token');
+      const company = sessionStorage.getItem('companyId');
+      const metaTemplates = await axios.get(`${BASE_PATH}/companies/get-templates?id=${company}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(metaTemplates.data.data)
+      setMetaTemplates(metaTemplates.data.data as any)
+    } catch (err: any) {
+      alert(err.response?.data.error.message);
+      setError("Failed to fetch Templates");
+    }finally{
+      setLoading(false)
+    }
+  }
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -65,7 +87,7 @@ export default function TemplateManagement() {
       const token = sessionStorage.getItem('token');
       const company = sessionStorage.getItem('company');
       const method = editingTemplates ? "PATCH" : "POST";
-
+      console.log(formData)
       await (axios as any)[method.toLowerCase()](url,
         {
           ...formData,
@@ -93,6 +115,7 @@ export default function TemplateManagement() {
     setFormData({
       title: template.title,
       body: template.body,
+      metaTemplate: template.metaTemplateId
     });
     setIsModalOpen(true);
   };
@@ -102,7 +125,8 @@ export default function TemplateManagement() {
     setEditingTemplates(null);
     setFormData({
       title: "",
-      body: ""
+      body: "",
+      metaTemplate:"",
     });
   };
 
@@ -269,6 +293,30 @@ export default function TemplateManagement() {
                   required
                 />
               </div>
+              <div>
+                  <label htmlFor="company" className="block text-sm font-medium text-gray-700">
+                    Select Meta Template
+                  </label>
+                  <select
+                    id="company"
+                    value={formData.metaTemplate || ""}
+                    onChange={(e) => {
+                      setFormData({ ...formData, metaTemplate: e.target.value})
+                      console.log(formData)
+                    }}
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="" disabled>
+                      Select a template
+                    </option>
+                    {metaTemplates.map(template => (
+                      <option key={template.id} value={template.id}>
+                          {template.name}
+                      </option>
+                  ))}
+                  </select>
+                </div>
               <div>
                 <label htmlFor="body" className="block text-sm font-medium text-gray-700">
                   Body

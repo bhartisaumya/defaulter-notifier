@@ -24,7 +24,7 @@ const getTemplate = async (req: Request, res: Response, next: NextFunction) : Pr
 
 const addNewTemplate = async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const {title, body, company} = req.body
+    const {title, body, company, metaTemplateId} = req.body
 
     const template = await TemplateModel.findOne
     ({title, company});
@@ -32,7 +32,7 @@ const addNewTemplate = async(req: Request, res: Response, next: NextFunction) =>
     if(template)
       throw createError.Conflict("Template already exists");
 
-    const newTemplate = new TemplateModel({title, body, company});
+    const newTemplate = new TemplateModel({title, body, company,metaTemplateId});
     newTemplate.save();
     
     res.status(201).json({message: "Template added successfully"});
@@ -60,9 +60,9 @@ const updateTemplate = async(req: Request, res: Response, next: NextFunction) =>
   try {
     const _id = req.query._id
     console.log(_id)
-    const {title, body, company} = req.body;
+    const {title, body, company, metaTemplate,json} = req.body;
     const template = await TemplateModel.findByIdAndUpdate
-    (_id, {title, body, company});
+    (_id, {title, body, company, metaTemplateId:metaTemplate,json});
 
     if(!template)
       throw createError.NotFound("Template not found");

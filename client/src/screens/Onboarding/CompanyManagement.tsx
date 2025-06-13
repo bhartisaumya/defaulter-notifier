@@ -30,6 +30,7 @@ export default function CompanyManagement() {
     credit: number;
     letterHead: string | null; // Allow File object or null
     whatsappToken: string | null;
+    waba: string | null;
   }>({
     name: "",
     legalName: "",
@@ -37,6 +38,7 @@ export default function CompanyManagement() {
     credit: 0,
     letterHead: null, // Ensure it's initially null
     whatsappToken: null,
+    waba: "",
   });
 
   useEffect(() => {
@@ -103,6 +105,7 @@ export default function CompanyManagement() {
       legalName: company.legalName,
       letterHead: company.letterHead,
       whatsappToken: company.whatsappToken,
+      waba: company.waba
     });
     setIsModalOpen(true);
   };
@@ -118,6 +121,7 @@ export default function CompanyManagement() {
       legalName: "",
       letterHead: null,
       whatsappToken: null,
+      waba: null
     });
   };
 
@@ -337,6 +341,20 @@ export default function CompanyManagement() {
                   />
                 </div>
                 <div>
+                <label htmlFor="waba" className="block text-sm font-medium text-gray-700">
+                    Waba
+                  </label>
+                  <input
+                    type="text"
+                    id="legalName"
+                    value={formData.waba!!}
+                    onChange={(e) => setFormData({ ...formData, waba: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  
                 <label htmlFor="whatsappToken" className="block text-sm font-medium text-gray-700">
                     Whatsapp API Token
                   </label>

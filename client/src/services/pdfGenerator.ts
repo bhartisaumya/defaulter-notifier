@@ -101,3 +101,4 @@ document.body.removeChild(container);
     console.error("Error generating PDF:", error)
   }
 }
+

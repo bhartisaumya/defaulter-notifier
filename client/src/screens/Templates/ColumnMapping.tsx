@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import axios from "axios"
 
-import type { IColumn } from "../../interface"
+import type { IColumn, ITemplate } from "../../interface"
 import { LayoutDashboard, Menu } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { BASE_PATH } from "../../constants/constants"
@@ -26,7 +26,8 @@ export default function FormEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-
+  const [metaTemplates, setMetaTemplates] = useState<any[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<ITemplate | null>(null)
   const navigate = useNavigate()
   const role = sessionStorage.getItem("role")
 
@@ -38,15 +39,59 @@ export default function FormEditor() {
     guarantor_2: "",
     guarantor_3: "",
   })
-
+  
+  const [mformData, setmFormData] = useState<any>({
+    _id:"",
+    title:"",
+    json:"",
+  })
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   useEffect(() => {
     fetchFormData()
+    fetchData()
   }, [])
+  useEffect(() => {
+    manageTemplatechange()
+  }, [selectedTemplate])
 
+
+  const manageTemplatechange = () => {
+    if (!selectedTemplate) {
+      return
+    }
+
+    const pattern = /\{([^}]+)\}/g
+    const matches = [...new Set([...selectedTemplate.body.matchAll(pattern)].map((m) => m[1]))]
+    const headers = [...matches].filter((item: any) => item !== 0 && item !== "pdfNameColumn");
+
+    const json = headers.map((header: string, index: number) => ({ [header]: index + 1 }));
+    console.log(json)
+    
+    setmFormData({...mformData,json})
+  }
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem('token');
+      const company = sessionStorage.getItem('company');
+
+      const url = `${BASE_PATH}/templates/?company=${company}`;
+      const template = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setMetaTemplates(template.data);
+    } catch (err: any) {
+      alert(err.response?.data.error.message);
+      setError("Failed to fetch Templates");
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchFormData = async () => {
     try {
       setLoading(true)
@@ -72,7 +117,60 @@ export default function FormEditor() {
       setLoading(false)
     }
   }
+  const handlemSubmit = async(e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      setSaving(true)
+      setError(null)
+      setSuccessMessage(null)
+      const values = mformData.json.map((entry: any) => Object.values(entry)[0]);
+      const hasDuplicates = new Set(values).size !== values.length;
+    
+      if (hasDuplicates) {
+        setError("Duplicate values found! Each header must have a unique number.");
+        return;
+      }
+      updateTemplate()
 
+    } catch (err) {
+      setError("Failed to save changes")
+      console.error("Error saving form data:", err)
+    }finally{
+      setSaving(false)
+    }
+  }
+  const updateTemplate = async () => {
+    setLoading(true);
+
+    try {
+      let url = `${BASE_PATH}/templates`;
+      url += true ? `/?_id=${selectedTemplate!!._id}` : "";
+
+      const token = sessionStorage.getItem('token');
+      const company = sessionStorage.getItem('company');
+      const method = true ? "PATCH" : "POST";
+      console.log(formData)
+      await (axios as any)[method.toLowerCase()](url,
+        {
+          ...selectedTemplate,
+          company,
+          json: mformData.json
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      await fetchData();
+    } catch (err: any) {
+      alert(err.response?.data.error.message);
+      setError("Failed to save Templates");
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -214,7 +312,119 @@ export default function FormEditor() {
               </div>
             </div>
           )}
+                    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div className="divide-y divide-gray-200">
+              <form onSubmit={handlemSubmit} className="space-y-6 p-6">
+              <div key={"xysys"} className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start">
+                    <label htmlFor={"MetaTemplate"} className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                      Select  Template
+                    </label>
+                    <select
+                    id="company"
+                    value={mformData._id || ""}
+                    onChange={(e) => {
+                      setmFormData({ ...mformData, _id: e.target.value})
+                      const template = metaTemplates.find((t) => t._id === e.target.value)
+                      if (template) {
+                        setSelectedTemplate(template)
+                      }
+                      console.log(formData)
+                    }}
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="" disabled>
+                      Select a template
+                    </option>
+                    {metaTemplates.map(template => (
+                      <option key={template._id} value={template._id}>
+                          {template.title}
+                      </option>
+                  ))}
+                  </select>
+                  </div>
+                  {(mformData.json || []).map((entry: any, index: number) => {
+  const key = Object.keys(entry)[0];
+  const value = entry[key];
 
+  return (
+    <div key={key} className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start">
+      <label htmlFor={key} className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+        {key}
+      </label>
+      <div className="mt-1 sm:mt-0 sm:col-span-2">
+        <input
+        min={0}
+        step={1}
+          type="number"
+          id={key}
+          name={key}
+          value={value}
+          onChange={(e) => {
+            
+            const updatedJson = [...mformData.json];
+            updatedJson[index] = { [key]: Number(e.target.value) };
+
+            setmFormData((prev: any) => ({
+              ...prev,
+              json: updatedJson,
+            }));
+          }}
+          className="max-w-lg block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md p-2 border"
+        />
+      </div>
+    </div>
+  );
+})}
+
+
+                <div className="pt-5">
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className={`
+                      inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white
+                      ${
+                        saving
+                          ? "bg-blue-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      }
+                    `}
+                    >
+                      {saving ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
           {/* Form */}
 
           <div className="bg-white shadow-sm rounded-lg overflow-hidden">

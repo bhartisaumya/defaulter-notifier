@@ -5,6 +5,7 @@ import createError from 'http-errors'
 import UserModel from "../models/users";
 import TemplateModel from "../models/messageTemplate";
 import { ObjectId } from "bson";
+import axios from 'axios';
 
 
 const getCompanies = async (req: Request, res: Response, next: NextFunction) => {
@@ -68,9 +69,10 @@ const deleteCompany = async(req: Request, res: Response, next: NextFunction) => 
 const updateCompany = async(req: Request, res: Response, next: NextFunction) => {
   try {
     const _id = req.query.id as string
-    const {name, address, credit, legalName, letterHead, whatsappToken} = req.body
+    console.log(req.body)
+    const {name, address, credit, legalName, letterHead, whatsappToken, waba} = req.body
 
-    const unalteredCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit, legalName, letterHead, whatsappToken})
+    const unalteredCompany = await CompanyModel.findByIdAndUpdate(_id, {name, address, credit, legalName, letterHead, whatsappToken, waba})
 
     if(!unalteredCompany)
       throw createError.NotFound("Company not found");
@@ -87,7 +89,7 @@ const updateCompany = async(req: Request, res: Response, next: NextFunction) => 
       )
     }
 
-    res.status(200).json({message: "Successfully updated"});
+    res.status(200).json({message: "Company Successfully updated"});
   } catch (error) {
     next(error)
   }
@@ -121,8 +123,32 @@ const sendMessage = async(req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+const getMetaTemplates = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const companyId = req.query.id?.toString().trim();
+    console.log(companyId)
+    const company = await CompanyModel.findOne({ _id: new ObjectId(companyId) });
+
+      if (!company) {
+        throw createError.NotFound("Company not found");
+      }
+ 
+      const metaTemplates = await axios.get(`https://partnersv1.pinbot.ai/v3/${company.waba}/message_templates`,{
+        headers: {
+          apikey: company.whatsappToken,
+        }})
+        if(!metaTemplates){
+           res.status(400).json({message: "Error in retreiving meta templates"})
+        }
+
+       res.status(200).json(metaTemplates.data);
+  } catch (error) {
+      next(error)
+  }
+}
 
 export{
+    getMetaTemplates,
     getCompanies,
     addNewCompany,
     updateCompany,
